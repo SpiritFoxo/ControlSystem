@@ -2,7 +2,7 @@ services:
 
   backend:
     build: ./backend/
-    container-name: control-service-backend
+    container_name: control-service-backend
     ports:
       - "${BACKEND_PORT}:8080"
     depends_on:
