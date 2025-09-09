@@ -31,7 +31,7 @@ services:
   minio:
     image: minio/minio:RELEASE.2025-04-03T14-56-28Z
     container_name: minio
-    command: server /data --console-address "${MINIO_CONSOLE_PORT}"
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     ports:
       - "${MINIO_PORT}:9000" 
       - "${MINIO_CONSOLE_PORT}:9001" 
@@ -45,7 +45,7 @@ services:
     image: hasura/graphql-engine:v2.48.4
     container_name: hasura
     ports:
-      - "${HASURA_PORT}:8080"
+      - "${HASURA_PORT}:8081"
     depends_on:
       - postgres
     restart: always
