@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ControlSystem/handlers"
 	"ControlSystem/models"
 	"log"
 
@@ -18,8 +19,12 @@ func DbInit() *gorm.DB {
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
-	//db := DbInit()
-	//server := handlers.NewServer(db)
+	db := DbInit()
+	server := handlers.NewServer(db)
+
+	auth := r.Group("api/auth")
+	auth.POST("/login", server.Login)
+	auth.POST("/refresh", server.RefreshTokenHandler)
 
 	return r
 }
