@@ -16,7 +16,7 @@ type User struct {
 	LastName   string `gorm:"not null"`
 	Email      string `gorm:"unique, not null"`
 	Password   string `gorm:"not null"`
-	Role       uint   `gorm:"not null"`
+	Role       uint   `gorm:"not null"` // 1 - engineer, 2 -manager, 3 - observer, 4 - admin, 5 - superadmin
 }
 
 func (user *User) Sanitize() {

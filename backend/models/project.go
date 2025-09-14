@@ -6,7 +6,7 @@ type Project struct {
 	gorm.Model
 	Name        string `gorm:"not null; unique"`
 	Description string
-	Status      uint `gorm:"not null"`
+	Status      uint `gorm:"not null;default:1"` // 1 - active, 2 - completed, 3 - archived
 }
 
 type UserProject struct {
