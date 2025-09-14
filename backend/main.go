@@ -2,6 +2,7 @@ package main
 
 import (
 	"ControlSystem/handlers"
+	"ControlSystem/midlleware"
 	"ControlSystem/models"
 	"log"
 
@@ -25,6 +26,10 @@ func SetupRouter() *gin.Engine {
 	auth := r.Group("api/auth")
 	auth.POST("/login", server.Login)
 	auth.POST("/refresh", server.RefreshTokenHandler)
+
+	admnin := r.Group("api/admin")
+	admnin.Use(midlleware.JWTMiddleware())
+	admnin.POST("/register", server.RegisterNewUser)
 
 	return r
 }
