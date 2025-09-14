@@ -40,8 +40,8 @@ func JWTMiddleware() gin.HandlerFunc {
 		}
 
 		roleId, ok := claims["role"].(float64)
-		if !ok || roleId < 4 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user role"})
 			c.Abort()
 			return
 		}
