@@ -27,6 +27,10 @@ func SetupRouter() *gin.Engine {
 	auth.POST("/login", server.Login)
 	auth.POST("/refresh", server.RefreshTokenHandler)
 
+	projects := r.Group("api/projects")
+	projects.Use(midlleware.JWTMiddleware())
+	projects.POST("/", server.CreateProject)
+
 	admnin := r.Group("api/admin")
 	admnin.Use(midlleware.JWTMiddleware())
 	admnin.POST("/register", server.RegisterNewUser)
