@@ -17,7 +17,15 @@ func Setup() (*gorm.DB, error) {
 		log.Fatal("Can not connect to the database:", err)
 	}
 
-	if err := db.AutoMigrate(&User{}); err != nil {
+	if err := db.AutoMigrate(
+		&User{},
+		&Project{},
+		&UserProject{},
+		&Report{},
+		&Defect{},
+		&Comment{},
+		&Attachment{},
+	); err != nil {
 		log.Fatal("Auto migration failed:", err)
 	}
 
