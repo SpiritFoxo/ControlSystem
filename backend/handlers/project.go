@@ -3,6 +3,7 @@ package handlers
 import (
 	"ControlSystem/models"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -114,4 +115,81 @@ func (s *Server) EditProjectInfo(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "project updated", "project": project})
+}
+
+func (s *Server) AssignEngineer(c *gin.Context) {
+
+	type AssignEngineerInput struct {
+		EngineerId []uint `json:"engineerId" binding:"required"`
+	}
+
+	roleId, exists := c.Get("role")
+	if !exists {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if roleId.(uint) != 3 {
+		c.JSON(403, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var input AssignEngineerInput
+
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	projectId, err := strconv.Atoi(c.Param("projectId"))
+	if err != nil {
+		c.JSON(400, gin.H{"error": "invalid project id"})
+		return
+	}
+
+	var project models.Project
+	if err := s.db.First(&project, projectId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(404, gin.H{"error": "project not found"})
+		} else {
+			c.JSON(500, gin.H{"error": "database error"})
+		}
+		return
+	}
+
+	for _, engId := range input.EngineerId {
+		var user models.User
+		if err := s.db.First(&user, engId).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(404, gin.H{"error": fmt.Sprintf("engineer with ID %d not found", engId)})
+			} else {
+				c.JSON(500, gin.H{"error": "database error"})
+			}
+			return
+		}
+		if user.Role != 1 {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("user with ID %d is not an engineer", engId)})
+			return
+		}
+	}
+
+	for _, engId := range input.EngineerId {
+		userProject := models.UserProject{
+			UserID:    engId,
+			ProjectID: uint(projectId),
+		}
+
+		var existing models.UserProject
+		if err := s.db.Where("user_id = ? AND project_id = ?", engId, projectId).First(&existing).Error; err == nil {
+			continue
+		}
+
+		if err := s.db.Create(&userProject).Error; err != nil {
+			c.JSON(500, gin.H{"error": "failed to assign engineer"})
+			return
+		}
+	}
+
+	c.JSON(200, gin.H{"message": "success"})
+
 }
