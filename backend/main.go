@@ -30,6 +30,7 @@ func SetupRouter() *gin.Engine {
 	projects := r.Group("api/projects")
 	projects.Use(midlleware.JWTMiddleware())
 	projects.POST("/", server.CreateProject)
+	projects.PATCH("/:projectId", server.EditProjectInfo)
 
 	admnin := r.Group("api/admin")
 	admnin.Use(midlleware.JWTMiddleware())
