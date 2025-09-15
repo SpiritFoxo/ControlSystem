@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Attachment struct {
 	gorm.Model
-	DefectID   uint   `gorm:"not null"`
+	DefectID   uint   `gorm:"not null, index"`
 	FileName   string `gorm:"not null"`
 	FilePath   string `gorm:"not null"`
 	FileType   string `gorm:"not null"`

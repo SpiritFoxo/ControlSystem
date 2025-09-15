@@ -14,7 +14,7 @@ type User struct {
 	FirstName  string `gorm:"not null"`
 	MiddleName string `gorm:"not null"`
 	LastName   string `gorm:"not null"`
-	Email      string `gorm:"unique, not null"`
+	Email      string `gorm:"unique, uniqueIndex, not null"`
 	Password   string `gorm:"not null"`
 	Role       uint   `gorm:"not null"` // 1 - engineer, 2 -manager, 3 - observer, 4 - admin, 5 - superadmin
 }
