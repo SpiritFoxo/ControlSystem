@@ -7,10 +7,10 @@ import (
 )
 
 type Server struct {
-	db     *gorm.DB
-	MiniIo *storage.MinioClient
+	db    *gorm.DB
+	MinIo *storage.MinioClient
 }
 
 func NewServer(db *gorm.DB, minio *storage.MinioClient) *Server {
-	return &Server{db: db, MiniIo: minio}
+	return &Server{db: db, MinIo: minio}
 }

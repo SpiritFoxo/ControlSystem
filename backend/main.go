@@ -39,9 +39,13 @@ func SetupRouter() *gin.Engine {
 	defects.Use(midlleware.JWTMiddleware())
 	defects.POST("/", server.CreateDefect)
 
-	admnin := r.Group("api/admin")
-	admnin.Use(midlleware.JWTMiddleware())
-	admnin.POST("/register", server.RegisterNewUser)
+	attachments := r.Group("api/attachments")
+	attachments.Use(midlleware.JWTMiddleware())
+	attachments.POST("/", server.UploadAttachment)
+
+	admin := r.Group("api/admin")
+	admin.Use(midlleware.JWTMiddleware())
+	admin.POST("/register", server.RegisterNewUser)
 
 	return r
 }
