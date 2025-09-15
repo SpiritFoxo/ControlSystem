@@ -4,7 +4,9 @@ import (
 	"ControlSystem/handlers"
 	"ControlSystem/midlleware"
 	"ControlSystem/models"
+	"ControlSystem/storage"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -21,7 +23,8 @@ func DbInit() *gorm.DB {
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	db := DbInit()
-	server := handlers.NewServer(db)
+	minioClient := storage.NewMinioClient(os.Getenv("MINIO_PORT"), os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), []string{"defect-images", "defect-files"}, false)
+	server := handlers.NewServer(db, minioClient)
 
 	auth := r.Group("api/auth")
 	auth.POST("/login", server.Login)

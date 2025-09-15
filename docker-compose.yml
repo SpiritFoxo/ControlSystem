@@ -20,6 +20,10 @@ services:
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_PORT=${MINIO_PORT}
+      - MINIO_CONSOLE_PORT=${MINIO_CONSOLE_PORT}
 
   client:
     build: ./client/controlsystem
@@ -41,7 +45,7 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d
 
   minio:
-    image: minio/minio:RELEASE.2025-04-03T14-56-28Z
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: minio
     command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     ports:
