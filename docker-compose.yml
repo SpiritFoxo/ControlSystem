@@ -57,20 +57,6 @@ services:
     volumes:
       - minio_data:/data
 
-  hasura:
-    image: hasura/graphql-engine:v2.48.4
-    container_name: hasura
-    ports:
-      - "${HASURA_PORT}:8081"
-    depends_on:
-      - postgres
-    restart: always
-    environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-
 
 volumes:
   postgres_data:
