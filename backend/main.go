@@ -34,6 +34,7 @@ func SetupRouter() *gin.Engine {
 	projects.Use(midlleware.JWTMiddleware())
 	projects.POST("/", server.CreateProject)
 	projects.PATCH("/:projectId", server.EditProjectInfo)
+	projects.GET("/", server.GetProjects)
 
 	defects := r.Group("api/defects")
 	defects.Use(midlleware.JWTMiddleware())

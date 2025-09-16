@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -192,4 +193,89 @@ func (s *Server) AssignEngineer(c *gin.Context) {
 
 	c.JSON(200, gin.H{"message": "success"})
 
+}
+
+func (s *Server) GetProjects(c *gin.Context) {
+
+	type ProjectResponse struct {
+		ID   uint   `json:"id"`
+		Name string `json:"name"`
+	}
+
+	roleId, exists := c.Get("role")
+	if !exists {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userId, exists := c.Get("userId")
+	if !exists {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page number"})
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit value"})
+		return
+	}
+	var projects []ProjectResponse
+	var total int64
+
+	offset := (page - 1) * limit
+
+	switch roleId.(uint) {
+	case 1:
+		if err := s.db.Model(&models.Project{}).
+			Joins("JOIN user_projects ON user_projects.project_id = projects.id").
+			Where("user_projects.user_id = ?", userId.(uint)).
+			Count(&total).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := s.db.Model(&models.Project{}).
+			Select("projects.id, projects.name").
+			Joins("JOIN user_projects ON user_projects.project_id = projects.id").
+			Where("user_projects.user_id = ?", userId.(uint)).
+			Offset(offset).
+			Limit(limit).
+			Scan(&projects).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	default:
+		if err := s.db.Model(&models.Project{}).Count(&total).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := s.db.Model(&models.Project{}).
+			Select("id, name").
+			Offset(offset).
+			Limit(limit).
+			Scan(&projects).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"projects": projects,
+		"pagination": gin.H{
+			"page":       page,
+			"limit":      limit,
+			"total":      total,
+			"totalPages": (total + int64(limit) - 1) / int64(limit),
+		},
+	})
 }
