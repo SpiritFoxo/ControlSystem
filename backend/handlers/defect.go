@@ -3,6 +3,8 @@ package handlers
 import (
 	"ControlSystem/models"
 	"errors"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -33,7 +35,7 @@ func (s *Server) CreateDefect(c *gin.Context) {
 	}
 
 	var input CreateDefectInput
-	if err := c.ShouldBind(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -75,4 +77,48 @@ func (s *Server) CreateDefect(c *gin.Context) {
 		"message": "defect created successfully",
 		"defect":  defect,
 	})
+}
+
+func (s *Server) LeaveComment(c *gin.Context) {
+
+	type CommentInput struct {
+		Content string `json:"content" binding:"required,max=255"`
+	}
+
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	defectId, exists := c.Params.Get("defectId")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "defectId is required"})
+		return
+	}
+
+	var input CommentInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		return
+	}
+
+	defectIDUint, err := strconv.ParseUint(defectId, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid defectId: " + err.Error()})
+		return
+	}
+
+	var comment models.Comment
+	comment.Content = input.Content
+	comment.DefectID = uint(defectIDUint)
+	comment.CreatedBy = userId.(uint)
+
+	if err := s.db.Create(&comment).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save comment"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Comment added successfully", "comment": comment})
+
 }
