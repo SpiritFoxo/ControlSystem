@@ -12,7 +12,7 @@ import (
 
 func (s *Server) CreateDefect(c *gin.Context) {
 	type CreateDefectInput struct {
-		Title       string `json:"title" binding:"required"`
+		Title       string `json:"title" binding:"required,min=3"`
 		Description string `json:"description" binding:"required"`
 		ProjectID   uint   `json:"projectId" binding:"required"`
 	}

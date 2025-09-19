@@ -15,7 +15,7 @@ import (
 func (s *Server) CreateProject(c *gin.Context) {
 
 	type CreateProjectInput struct {
-		Name        string `json:"name" binding:"required"`
+		Name        string `json:"name" binding:"required,min=3"`
 		Description string `json:"description"`
 	}
 

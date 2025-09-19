@@ -19,9 +19,9 @@ import (
 func (s *Server) RegisterNewUser(c *gin.Context) {
 
 	type RegisterInput struct {
-		FirstName  string `json:"first_name" binding:"required"`
-		MiddleName string `json:"middle_name" binding:"required"`
-		LastName   string `json:"last_name" binding:"required"`
+		FirstName  string `json:"first_name" binding:"required,min=1"`
+		MiddleName string `json:"middle_name" binding:"required,min=1"`
+		LastName   string `json:"last_name" binding:"required,min=1"`
 		OrigEmail  string `json:"email" binding:"required,email"`
 		Role       uint   `json:"role" binding:"required"`
 	}
