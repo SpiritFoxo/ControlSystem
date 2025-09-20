@@ -91,6 +91,12 @@ func (s *Server) LeaveComment(c *gin.Context) {
 		return
 	}
 
+	roleId, exists := c.Get("role")
+	if !exists || (roleId.(uint) != 1 && roleId.(uint) != 2) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: only engineers and managers can leave comments"})
+		return
+	}
+
 	defectId, exists := c.Params.Get("defectId")
 	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "defectId is required"})
@@ -107,6 +113,21 @@ func (s *Server) LeaveComment(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid defectId: " + err.Error()})
 		return
+	}
+
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
+		return
+	}
+
+	if roleId.(uint) <= 2 {
+		var count int64
+		s.db.Table("user_project").Where("project_id = ? AND user_id = ?", defectIDUint, user.ID).Count(&count)
+		if count == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Tou do not have access to comment on this defect"})
+			return
+		}
 	}
 
 	var comment models.Comment
