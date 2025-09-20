@@ -2,8 +2,8 @@ package main
 
 import (
 	"ControlSystem/handlers"
-	"ControlSystem/midlleware"
 	"ControlSystem/models"
+	"ControlSystem/routers"
 	"ControlSystem/storage"
 	"log"
 	"os"
@@ -26,28 +26,21 @@ func SetupRouter() *gin.Engine {
 	minioClient := storage.NewMinioClient(os.Getenv("MINIO_PORT"), os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), []string{"defect-images", "defect-files"}, false)
 	server := handlers.NewServer(db, minioClient)
 
-	auth := r.Group("api/auth")
-	auth.POST("/login", server.Login)
-	auth.POST("/refresh", server.RefreshTokenHandler)
+	api := r.Group("api/v1")
+	auth := api.Group("/auth")
+	routers.RegisterAuthRoutes(auth, server)
 
-	projects := r.Group("api/projects")
-	projects.Use(midlleware.JWTMiddleware())
-	projects.POST("/", server.CreateProject)
-	projects.PATCH("/:projectId", server.EditProjectInfo)
-	projects.GET("/", server.GetProjects)
+	projects := api.Group("/projects")
+	routers.RegisterProjectsRoutes(projects, server)
 
-	defects := r.Group("api/defects")
-	defects.Use(midlleware.JWTMiddleware())
-	defects.POST("/", server.CreateDefect)
-	defects.POST("/:defectId/comments", server.LeaveComment)
+	defects := api.Group("/defects")
+	routers.RegisterDefectsRoutes(defects, server)
 
-	attachments := r.Group("api/attachments")
-	attachments.Use(midlleware.JWTMiddleware())
-	attachments.POST("/", server.UploadAttachment)
+	attachments := api.Group("/attachments")
+	routers.RegisterAttachmentsRoutes(attachments, server)
 
 	admin := r.Group("api/admin")
-	admin.Use(midlleware.JWTMiddleware())
-	admin.POST("/register", server.RegisterNewUser)
+	routers.RegisterAdminRoutes(admin, server)
 
 	return r
 }
