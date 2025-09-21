@@ -136,6 +136,11 @@ func (s *Server) EditUserInfo(c *gin.Context) {
 		return
 	}
 
+	if user.Role >= roleId.(uint) || user.ID != uint(userId) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to edit this user"})
+		return
+	}
+
 	updates := make(map[string]interface{})
 	if input.FirstName != "" {
 		updates["first_name"] = input.FirstName
@@ -160,6 +165,77 @@ func (s *Server) EditUserInfo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 
+}
+
+func (s *Server) GetUsers(c *gin.Context) {
+	type UserResponse struct {
+		ID        uint   `json:"id"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Email     string `json:"email"`
+		Role      uint   `json:"role"`
+		IsEnabled bool   `json:"is_enabled"`
+	}
+
+	roleId, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if roleId.(uint) < 4 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
+		return
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "4")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page number"})
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit value"})
+		return
+	}
+
+	var users []models.User
+	var total int64
+	offset := (page - 1) * limit
+
+	if err := s.db.Model(&models.User{}).Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to count users"})
+		return
+	}
+
+	if err := s.db.Where("not id = ?", userId.(uint)).Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch users"})
+		return
+	}
+
+	var response []UserResponse
+	for _, u := range users {
+		response = append(response, UserResponse{
+			ID:        u.ID,
+			FirstName: u.FirstName,
+			LastName:  u.LastName,
+			Email:     u.Email,
+			Role:      u.Role,
+			IsEnabled: u.IsEnabled,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func generateCorporateEmail(firstName, lastName string, db *gorm.DB) string {
