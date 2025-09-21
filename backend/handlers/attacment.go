@@ -41,9 +41,9 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 
 	switch ext {
 	case ".png", ".jpg", ".jpeg":
-		bucketName = "defect-images"
+		bucketName = "images"
 	case ".pdf", ".docx":
-		bucketName = "defect-files"
+		bucketName = "files"
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported file type"})
 		return

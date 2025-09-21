@@ -121,7 +121,7 @@ func (s *Server) LeaveComment(c *gin.Context) {
 		return
 	}
 
-	if roleId.(uint) <= 2 {
+	if roleId.(uint) < 2 {
 		var count int64
 		s.db.Table("defect").Where("id = ? AND assigned_to = ?", defectIDUint, user.ID).Count(&count)
 		if count == 0 {
