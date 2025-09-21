@@ -3,8 +3,10 @@ package handlers
 import (
 	"ControlSystem/models"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,49 +15,20 @@ import (
 )
 
 func (s *Server) UploadAttachment(c *gin.Context) {
-	type UploadAttachmentInput struct {
-		DefectID  uint `form:"defectId"`
-		ProjectID uint `form:"projectId"`
-	}
 
 	roleId, exists := c.Get("role")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if roleId.(uint) != 1 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only engineers can attach files"})
+	if roleId.(uint) >= 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only engineers and managers can attach files"})
 		return
-	}
-
-	var input UploadAttachmentInput
-	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if input.DefectID == 0 && input.ProjectID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "either defectId or projectId must be provided"})
-		return
-	}
-
-	if input.ProjectID != 0 {
-		var project models.Project
-		if err := s.db.First(&project, input.ProjectID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
-			return
-		}
-	}
-	if input.DefectID != 0 {
-		var defect models.Defect
-		if err := s.db.First(&defect, input.DefectID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "defect not found"})
-			return
-		}
 	}
 
 	file, err := c.FormFile("file")
 	if err != nil {
+		log.Printf("FormFile error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
 		return
 	}
@@ -65,6 +38,36 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 		return
 	}
 	defer f.Close()
+
+	projectID, _ := strconv.Atoi(c.PostForm("projectId"))
+	defectID, _ := strconv.Atoi(c.PostForm("defectId"))
+
+	if defectID == 0 && projectID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "either defectId or projectId must be provided"})
+		return
+	}
+
+	var projectIDPtr *uint
+	if projectID != 0 {
+		var project models.Project
+		if err := s.db.First(&project, projectID).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
+			return
+		}
+		tmp := uint(projectID)
+		projectIDPtr = &tmp
+	}
+
+	var defectIDPtr *uint
+	if defectID != 0 {
+		var defect models.Defect
+		if err := s.db.First(&defect, defectID).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "defect not found"})
+			return
+		}
+		tmp := uint(defectID)
+		defectIDPtr = &tmp
+	}
 
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	var bucketName string
@@ -88,15 +91,15 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 		return
 	}
 
-	userId, exists := c.Get("userId")
+	userId, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
 		return
 	}
 
 	attachment := models.Attachment{
-		DefectID:   input.DefectID,
-		ProjectID:  input.ProjectID,
+		DefectID:   defectIDPtr,
+		ProjectID:  projectIDPtr,
 		FileName:   fileName,
 		FilePath:   bucketName,
 		FileType:   ext,

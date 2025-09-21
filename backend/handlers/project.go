@@ -212,7 +212,7 @@ func (s *Server) GetProjects(c *gin.Context) {
 		return
 	}
 
-	userId, exists := c.Get("userId")
+	userId, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(401, gin.H{"error": "unauthorized"})
 		return

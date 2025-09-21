@@ -10,9 +10,4 @@ import (
 func RegisterAttachmentsRoutes(r *gin.RouterGroup, s *handlers.Server) {
 	r.Use(midlleware.JWTMiddleware())
 	r.POST("/", s.UploadAttachment)
-	/*
-		TODO
-		/get/ -?
-		Update upload method to support projects
-	*/
 }
