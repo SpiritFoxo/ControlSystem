@@ -20,7 +20,6 @@ func Setup() (*gorm.DB, error) {
 	if err := db.AutoMigrate(
 		&User{},
 		&Project{},
-		&UserProject{},
 		&Report{},
 		&Defect{},
 		&Comment{},

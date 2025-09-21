@@ -175,17 +175,21 @@ func (s *Server) AssignEngineer(c *gin.Context) {
 	}
 
 	for _, engId := range input.EngineerId {
-		userProject := models.UserProject{
-			UserID:    engId,
-			ProjectID: uint(projectId),
+		var user models.User
+		if err := s.db.First(&user, engId).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(404, gin.H{"error": fmt.Sprintf("engineer with ID %d not found", engId)})
+			} else {
+				c.JSON(500, gin.H{"error": "database error"})
+			}
+			return
+		}
+		if user.Role != 1 {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("user with ID %d is not an engineer", engId)})
+			return
 		}
 
-		var existing models.UserProject
-		if err := s.db.Where("user_id = ? AND project_id = ?", engId, projectId).First(&existing).Error; err == nil {
-			continue
-		}
-
-		if err := s.db.Create(&userProject).Error; err != nil {
+		if err := s.db.Model(&project).Association("Users").Append(&user); err != nil {
 			c.JSON(500, gin.H{"error": "failed to assign engineer"})
 			return
 		}

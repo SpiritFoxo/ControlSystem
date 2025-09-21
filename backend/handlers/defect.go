@@ -50,13 +50,14 @@ func (s *Server) CreateDefect(c *gin.Context) {
 		return
 	}
 
-	var userProject models.UserProject
-	if err := s.db.Where("user_id = ? AND project_id = ?", userId.(uint), input.ProjectID).First(&userProject).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(403, gin.H{"error": "user not assigned to this project"})
-		} else {
-			c.JSON(500, gin.H{"error": "database error"})
-		}
+	var user models.User
+	if err := s.db.Preload("Projects", "id = ?", input.ProjectID).First(&user, userId.(uint)).Error; err != nil {
+		c.JSON(500, gin.H{"error": "database error"})
+		return
+	}
+
+	if len(user.Projects) == 0 {
+		c.JSON(403, gin.H{"error": "user not assigned to this project"})
 		return
 	}
 

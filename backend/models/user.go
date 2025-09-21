@@ -11,13 +11,14 @@ import (
 
 type User struct {
 	gorm.Model
-	FirstName  string `gorm:"not null"`
-	MiddleName string `gorm:"not null"`
-	LastName   string `gorm:"not null"`
-	Email      string `gorm:"unique, uniqueIndex, not null"`
-	Password   string `gorm:"not null"`
-	Role       uint   `gorm:"not null"` // 1 - engineer, 2 - manager, 3 - observer, 4 - admin, 5 - superadmin
-	IsEnabled  bool   `gorm:"default:true"`
+	FirstName  string    `gorm:"not null"`
+	MiddleName string    `gorm:"not null"`
+	LastName   string    `gorm:"not null"`
+	Email      string    `gorm:"unique, uniqueIndex, not null"`
+	Password   string    `gorm:"not null"`
+	Role       uint      `gorm:"not null"` // 1 - engineer, 2 - manager, 3 - observer, 4 - admin, 5 - superadmin
+	IsEnabled  bool      `gorm:"default:true"`
+	Projects   []Project `gorm:"many2many:user_project;"`
 }
 
 func (user *User) Sanitize() {
