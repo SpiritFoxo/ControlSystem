@@ -94,6 +94,74 @@ func (s *Server) RegisterNewUser(c *gin.Context) {
 
 }
 
+func (s *Server) EditUserInfo(c *gin.Context) {
+	type EdituserInfoInput struct {
+		FirstName  string `json:"first_name" binding:"omitempty,min=1"`
+		MiddleName string `json:"middle_name" binding:"omitempty,min=1"`
+		LastName   string `json:"last_name" binding:"omitempty,min=1"`
+		Role       uint   `json:"role" binding:"omitempty"`
+		IsEnabled  bool   `json:"is_enabled" binding:"omitempty"`
+	}
+
+	roleId, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if roleId.(uint) < 4 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
+		return
+	}
+
+	userId, err := strconv.Atoi(c.Param("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var input EdituserInfoInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		return
+	}
+
+	if input.Role >= roleId.(uint) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions to assign this role"})
+		return
+	}
+
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	updates := make(map[string]interface{})
+	if input.FirstName != "" {
+		updates["first_name"] = input.FirstName
+	}
+	if input.MiddleName != "" {
+		updates["middle_name"] = input.MiddleName
+	}
+	if input.LastName != "" {
+		updates["last_name"] = input.LastName
+	}
+	if input.Role != 0 {
+		updates["role"] = input.Role
+	}
+	updates["is_enabled"] = input.IsEnabled
+
+	if len(updates) > 0 {
+		if err := s.db.Model(&user).Updates(updates).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, user)
+
+}
+
 func generateCorporateEmail(firstName, lastName string, db *gorm.DB) string {
 	firstName = utils.Transliterate(firstName)
 	lastName = utils.Transliterate(lastName)

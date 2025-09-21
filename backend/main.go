@@ -39,7 +39,7 @@ func SetupRouter() *gin.Engine {
 	attachments := api.Group("/attachments")
 	routers.RegisterAttachmentsRoutes(attachments, server)
 
-	admin := r.Group("api/admin")
+	admin := api.Group("/admin")
 	routers.RegisterAdminRoutes(admin, server)
 
 	return r
