@@ -219,14 +219,12 @@ func (s *Server) GetdefectById(c *gin.Context) {
 	}
 
 	var responce []DefectResponse
-	var creator *UserResponse
-	creator = &UserResponse{
+	var creator = &UserResponse{
 		FirstName: defect.Creator.FirstName,
 		LastName:  defect.Creator.LastName,
 		Email:     defect.Creator.Email,
 	}
-	var assignee *UserResponse
-	assignee = &UserResponse{
+	var assignee = &UserResponse{
 		FirstName: defect.Assignee.FirstName,
 		LastName:  defect.Assignee.LastName,
 		Email:     defect.Assignee.Email,
