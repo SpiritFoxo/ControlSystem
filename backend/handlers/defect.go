@@ -80,6 +80,100 @@ func (s *Server) CreateDefect(c *gin.Context) {
 	})
 }
 
+func (s *Server) GetDefects(c *gin.Context) {
+	type GetDefectsInput struct {
+		ProjectID uint `json:"projectId" binding:"required"`
+	}
+
+	type UserResponse struct {
+		ID        uint   `json:"id"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Email     string `json:"email"`
+	}
+
+	type DefectResponse struct {
+		ID        uint          `json:"id"`
+		Title     string        `json:"title"`
+		Priority  uint          `json:"priority"`
+		CreatedBy uint          `json:"createdBy"`
+		Creator   *UserResponse `json:"creator,omitempty"`
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "4")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page number"})
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit value"})
+		return
+	}
+
+	var input GetDefectsInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	var defects []models.Defect
+	var total int64
+
+	offset := (page - 1) * limit
+
+	if err := s.db.Model(&models.Defect{}).
+		Where("project_id = ?", input.ProjectID).
+		Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := s.db.Preload("Creator").Preload("Assignee").Model(&models.Defect{}).
+		Where("project_id = ?", input.ProjectID).
+		Offset(offset).
+		Limit(limit).
+		Find(&defects).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+	var response []DefectResponse
+	for _, d := range defects {
+		creator := &UserResponse{
+			ID:        d.Creator.ID,
+			FirstName: d.Creator.FirstName,
+			LastName:  d.Creator.LastName,
+			Email:     d.Creator.Email,
+		}
+
+		response = append(response, DefectResponse{
+			ID:        d.ID,
+			Title:     d.Title,
+			Priority:  d.Priority,
+			CreatedBy: d.CreatedBy,
+			Creator:   creator,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"defects": response,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"totalPages":  totalPages,
+			"hasNextPage": page < int(totalPages),
+			"hasPrevPage": page > 1,
+		},
+	})
+}
+
 func (s *Server) LeaveComment(c *gin.Context) {
 
 	type CommentInput struct {

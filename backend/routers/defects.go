@@ -11,6 +11,7 @@ func RegisterDefectsRoutes(r *gin.RouterGroup, s *handlers.Server) {
 	r.Use(midlleware.JWTMiddleware())
 	r.POST("/", s.CreateDefect)
 	r.POST("/:defectId/comments", s.LeaveComment)
+	r.GET("/", s.GetDefects)
 	/*
 		TODO
 		/get-defects
