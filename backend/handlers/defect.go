@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -146,7 +147,6 @@ func (s *Server) GetDefects(c *gin.Context) {
 	var response []DefectResponse
 	for _, d := range defects {
 		creator := &UserResponse{
-			ID:        d.Creator.ID,
 			FirstName: d.Creator.FirstName,
 			LastName:  d.Creator.LastName,
 			Email:     d.Creator.Email,
@@ -172,6 +172,81 @@ func (s *Server) GetDefects(c *gin.Context) {
 			"hasPrevPage": page > 1,
 		},
 	})
+}
+
+func (s *Server) GetdefectById(c *gin.Context) {
+	type UserResponse struct {
+		ID        uint   `json:"id"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Email     string `json:"email"`
+	}
+
+	type DefectResponse struct {
+		ID          uint          `json:"id"`
+		ProjectID   uint          `json:"projectId"`
+		Title       string        `json:"title"`
+		Description string        `json:"description"`
+		Priority    uint          `json:"priority"`
+		Status      uint          `json:"status"`
+		AssignedTo  uint          `json:"assignedTo"`
+		Assignee    *UserResponse `json:"assignee,omitempty"`
+		CreatedBy   uint          `json:"createdBy"`
+		Creator     *UserResponse `json:"creator,omitempty"`
+		Deadline    *time.Time    `json:"deadline"`
+	}
+
+	defectId, exists := c.Params.Get("defectId")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "defectId is required"})
+		return
+	}
+
+	defectIDUint, err := strconv.ParseUint(defectId, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid defectId: " + err.Error()})
+		return
+	}
+
+	var defect models.Defect
+	if err := s.db.Preload("Creator").Preload("Assignee").First(&defect, defectIDUint).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Defect not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve defect"})
+		}
+		return
+	}
+
+	var responce []DefectResponse
+	var creator *UserResponse
+	creator = &UserResponse{
+		FirstName: defect.Creator.FirstName,
+		LastName:  defect.Creator.LastName,
+		Email:     defect.Creator.Email,
+	}
+	var assignee *UserResponse
+	assignee = &UserResponse{
+		FirstName: defect.Assignee.FirstName,
+		LastName:  defect.Assignee.LastName,
+		Email:     defect.Assignee.Email,
+	}
+
+	responce = append(responce, DefectResponse{
+		ID:          defect.ID,
+		ProjectID:   defect.ProjectID,
+		Title:       defect.Title,
+		Description: defect.Description,
+		Priority:    defect.Priority,
+		Status:      defect.Status,
+		AssignedTo:  defect.AssignedTo,
+		CreatedBy:   defect.CreatedBy,
+		Assignee:    assignee,
+		Creator:     creator,
+		Deadline:    defect.Deadline,
+	})
+
+	c.JSON(http.StatusOK, gin.H{"defect": responce})
 }
 
 func (s *Server) LeaveComment(c *gin.Context) {

@@ -12,10 +12,9 @@ func RegisterDefectsRoutes(r *gin.RouterGroup, s *handlers.Server) {
 	r.POST("/", s.CreateDefect)
 	r.POST("/:defectId/comments", s.LeaveComment)
 	r.GET("/", s.GetDefects)
+	r.GET("/:defectId", s.GetdefectById)
 	/*
 		TODO
-		/get-defects
-		/get-defect/:defectId
 		/edit-defect/:defectId
 		/change-status
 	*/
