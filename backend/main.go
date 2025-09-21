@@ -23,7 +23,7 @@ func DbInit() *gorm.DB {
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	db := DbInit()
-	minioClient := storage.NewMinioClient(os.Getenv("MINIO_PORT"), os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), []string{"images", "files"}, false)
+	minioClient := storage.NewMinioClient(os.Getenv("MINIO_SERVER_URL"), os.Getenv("MINIO_PORT"), os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), []string{"images", "files"}, false)
 	server := handlers.NewServer(db, minioClient)
 
 	api := r.Group("api/v1")

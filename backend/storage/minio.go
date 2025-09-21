@@ -3,6 +3,8 @@ package storage
 import (
 	"context"
 	"log"
+	"net/url"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -13,8 +15,8 @@ type MinioClient struct {
 	Buckets []string
 }
 
-func NewMinioClient(port, accessKey, secretKey string, buckets []string, useSSL bool) *MinioClient {
-	endpoint := "minio:" + port
+func NewMinioClient(address, port, accessKey, secretKey string, buckets []string, useSSL bool) *MinioClient {
+	endpoint := address + ":" + port
 	log.Println("Connecting to MinIO at", endpoint)
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -39,4 +41,17 @@ func NewMinioClient(port, accessKey, secretKey string, buckets []string, useSSL 
 	}
 
 	return &MinioClient{Client: client, Buckets: buckets}
+}
+
+func (m *MinioClient) GetFileURL(bucket, fileName string, expiry time.Duration) (string, error) {
+	ctx := context.Background()
+	reqParams := make(url.Values)
+	presignedURL, err := m.Client.PresignedGetObject(ctx, bucket, fileName, expiry, reqParams)
+	if err != nil {
+		log.Printf("Failed to generate presigned URL: %v", err)
+		return "", err
+	}
+	log.Printf("Generated presigned URL: %s", presignedURL.String())
+
+	return presignedURL.String(), nil
 }

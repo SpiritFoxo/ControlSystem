@@ -112,7 +112,7 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message":    "file uploaded successfully",
-		"attachment": attachment,
+		"attachment": attachment.ID,
 	})
 }
 

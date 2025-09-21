@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -202,8 +203,9 @@ func (s *Server) AssignEngineer(c *gin.Context) {
 func (s *Server) GetProjects(c *gin.Context) {
 
 	type ProjectResponse struct {
-		ID   uint   `json:"id"`
-		Name string `json:"name"`
+		ID       uint   `json:"id"`
+		Name     string `json:"name"`
+		PhotoURL string `json:"photoUrl,omitempty"`
 	}
 
 	roleId, exists := c.Get("role")
@@ -240,8 +242,8 @@ func (s *Server) GetProjects(c *gin.Context) {
 	switch roleId.(uint) {
 	case 1:
 		if err := s.db.Model(&models.Project{}).
-			Joins("JOIN user_projects ON user_projects.project_id = projects.id").
-			Where("user_projects.user_id = ?", userId.(uint)).
+			Joins("JOIN user_project ON user_project.project_id = projects.id").
+			Where("user_project.user_id = ?", userId.(uint)).
 			Count(&total).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -249,8 +251,8 @@ func (s *Server) GetProjects(c *gin.Context) {
 
 		if err := s.db.Model(&models.Project{}).
 			Select("projects.id, projects.name").
-			Joins("JOIN user_projects ON user_projects.project_id = projects.id").
-			Where("user_projects.user_id = ?", userId.(uint)).
+			Joins("JOIN user_project ON user_project.project_id = projects.id").
+			Where("user_project.user_id = ?", userId.(uint)).
 			Offset(offset).
 			Limit(limit).
 			Scan(&projects).Error; err != nil {
@@ -270,6 +272,28 @@ func (s *Server) GetProjects(c *gin.Context) {
 			Scan(&projects).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
+		}
+	}
+
+	var attachments []models.Attachment
+	projectIDs := make([]uint, len(projects))
+	for i, p := range projects {
+		projectIDs[i] = p.ID
+	}
+
+	if err := s.db.Where("project_id IN ?", projectIDs).Find(&attachments).Error; err == nil {
+		attMap := make(map[uint]models.Attachment)
+		for _, a := range attachments {
+			if a.ProjectID != nil {
+				attMap[*a.ProjectID] = a
+			}
+		}
+		for i := range projects {
+			if att, ok := attMap[projects[i].ID]; ok {
+				if url, err := s.MinIo.GetFileURL(att.FilePath, att.FileName, 24*time.Hour); err == nil {
+					projects[i].PhotoURL = url
+				}
+			}
 		}
 	}
 
