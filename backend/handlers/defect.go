@@ -247,6 +247,65 @@ func (s *Server) GetdefectById(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"defect": responce})
 }
 
+func (s *Server) UpdateDefect(c *gin.Context) {
+
+	type UpdateDefectInput struct {
+		Title       string `json:"title" binding:"omitempty,min=3"`
+		Description string `json:"description" binding:"omitempty"`
+		Priority    uint   `json:"priority" binding:"omitempty,oneof=1 2 3"`
+		Status      uint   `json:"status" binding:"omitempty,oneof=1 2 3 4"`
+	}
+
+	defectId, exists := c.Params.Get("defectId")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "defectId is required"})
+		return
+	}
+	defectIDUint, err := strconv.ParseUint(defectId, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid defectId: " + err.Error()})
+		return
+	}
+
+	var input UpdateDefectInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		return
+	}
+
+	var defect models.Defect
+	if err := s.db.First(&defect, defectIDUint).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Defect not found"})
+			return
+		}
+	}
+
+	updates := make(map[string]interface{})
+	if input.Title != "" {
+		updates["title"] = input.Title
+	}
+	if input.Description != "" {
+		updates["description"] = input.Description
+	}
+	if input.Priority != 0 {
+		updates["priority"] = input.Priority
+	}
+	if input.Status != 0 {
+		updates["status"] = input.Status
+	}
+
+	if len(updates) > 0 {
+		if err := s.db.Model(&defect).Updates(updates).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, defect.ID)
+
+}
+
 func (s *Server) LeaveComment(c *gin.Context) {
 
 	type CommentInput struct {

@@ -13,9 +13,5 @@ func RegisterDefectsRoutes(r *gin.RouterGroup, s *handlers.Server) {
 	r.POST("/:defectId/comments", s.LeaveComment)
 	r.GET("/", s.GetDefects)
 	r.GET("/:defectId", s.GetdefectById)
-	/*
-		TODO
-		/edit-defect/:defectId
-		/change-status
-	*/
+	r.PATCH("/:defectId", s.UpdateDefect)
 }
