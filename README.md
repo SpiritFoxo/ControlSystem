@@ -20,7 +20,8 @@ The project is fully containerized with **Docker**.
 
 ### Prerequisites
 - [Docker](https://www.docker.com/get-started) installed  
-- [Docker Compose](https://docs.docker.com/compose/) installed  
+- [Docker Compose](https://docs.docker.com/compose/) installed
+- [MinIo](https://docs.min.io/community/minio-object-store/operations/deployments/installation.html) installed
 
 ### Installation
 
