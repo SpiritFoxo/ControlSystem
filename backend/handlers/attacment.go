@@ -58,6 +58,12 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to upload file: %v", err)})
 		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "File uploaded successfully",
+		"fileName": fileName,
+		"bucket":   bucketName,
+	})
 }
 
 func generateUniqueName() string {
