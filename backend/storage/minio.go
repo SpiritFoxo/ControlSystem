@@ -48,10 +48,8 @@ func (m *MinioClient) GetFileURL(bucket, fileName string, expiry time.Duration) 
 	reqParams := make(url.Values)
 	presignedURL, err := m.Client.PresignedGetObject(ctx, bucket, fileName, expiry, reqParams)
 	if err != nil {
-		log.Printf("Failed to generate presigned URL: %v", err)
 		return "", err
 	}
-	log.Printf("Generated presigned URL: %s", presignedURL.String())
 
 	return presignedURL.String(), nil
 }

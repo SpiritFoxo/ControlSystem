@@ -99,6 +99,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 		Priority  uint          `json:"priority"`
 		CreatedBy uint          `json:"createdBy"`
 		Creator   *UserResponse `json:"creator,omitempty"`
+		PhotoUrl  string        `json:"photoUrl,omitempty"`
 	}
 
 	pageStr := c.DefaultQuery("page", "1")
@@ -138,27 +139,59 @@ func (s *Server) GetDefects(c *gin.Context) {
 		Where("project_id = ?", input.ProjectID).
 		Offset(offset).
 		Limit(limit).
-		Find(&defects).Error; err != nil {
+		Scan(&defects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	defectIDs := make([]uint, 0, len(defects))
+	for _, d := range defects {
+		defectIDs = append(defectIDs, d.ID)
+	}
+
+	var attachments []models.Attachment
+	if len(defectIDs) > 0 {
+		if err := s.db.Where("defect_id IN ?", defectIDs).Find(&attachments).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	attachmentsMap := make(map[uint][]models.Attachment)
+	for _, a := range attachments {
+		if a.DefectID != nil {
+			attachmentsMap[*a.DefectID] = append(attachmentsMap[*a.DefectID], a)
+		}
+	}
+
 	totalPages := (total + int64(limit) - 1) / int64(limit)
 	var response []DefectResponse
+
 	for _, d := range defects {
 		creator := &UserResponse{
+			ID:        d.Creator.ID,
 			FirstName: d.Creator.FirstName,
 			LastName:  d.Creator.LastName,
 			Email:     d.Creator.Email,
 		}
 
-		response = append(response, DefectResponse{
+		defResp := DefectResponse{
 			ID:        d.ID,
 			Title:     d.Title,
 			Priority:  d.Priority,
 			CreatedBy: d.CreatedBy,
 			Creator:   creator,
-		})
+		}
+
+		// если есть вложения, берём первое и генерируем ссылку
+		if atts, ok := attachmentsMap[d.ID]; ok && len(atts) > 0 {
+			url, err := s.MinIo.GetFileURL(atts[0].FilePath, atts[0].FileName, 24*time.Hour)
+			if err == nil {
+				defResp.PhotoUrl = url
+			}
+		}
+
+		response = append(response, defResp)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -194,6 +227,7 @@ func (s *Server) GetdefectById(c *gin.Context) {
 		CreatedBy   uint          `json:"createdBy"`
 		Creator     *UserResponse `json:"creator,omitempty"`
 		Deadline    *time.Time    `json:"deadline"`
+		PhotoUrl    string        `json:"photoUrl,omitempty"`
 	}
 
 	defectId, exists := c.Params.Get("defectId")
@@ -218,7 +252,7 @@ func (s *Server) GetdefectById(c *gin.Context) {
 		return
 	}
 
-	var responce []DefectResponse
+	var response []DefectResponse
 	var creator = &UserResponse{
 		FirstName: defect.Creator.FirstName,
 		LastName:  defect.Creator.LastName,
@@ -229,8 +263,15 @@ func (s *Server) GetdefectById(c *gin.Context) {
 		LastName:  defect.Assignee.LastName,
 		Email:     defect.Assignee.Email,
 	}
+	var urlString string
+	var attachment models.Attachment
+	if err := s.db.Where("defect_id = ?", defectIDUint).First(&attachment).Error; err == nil {
+		if url, err := s.MinIo.GetFileURL(attachment.FilePath, attachment.FileName, 24*time.Hour); err == nil {
+			urlString = url
+		}
+	}
 
-	responce = append(responce, DefectResponse{
+	response = append(response, DefectResponse{
 		ID:          defect.ID,
 		ProjectID:   defect.ProjectID,
 		Title:       defect.Title,
@@ -242,9 +283,10 @@ func (s *Server) GetdefectById(c *gin.Context) {
 		Assignee:    assignee,
 		Creator:     creator,
 		Deadline:    defect.Deadline,
+		PhotoUrl:    urlString,
 	})
 
-	c.JSON(http.StatusOK, gin.H{"defect": responce})
+	c.JSON(http.StatusOK, gin.H{"defect": response})
 }
 
 func (s *Server) UpdateDefect(c *gin.Context) {
