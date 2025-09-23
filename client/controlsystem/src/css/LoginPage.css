@@ -1,0 +1,91 @@
+.background {
+    background-image: url('../../public/images/login-background.png');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-container {
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    width: 650px;
+}
+
+.login-container h2 {
+    font-size: 3.4rem;
+    margin-bottom: 35px;
+    max-width: 16ch;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 75px;
+}
+
+.form-group{
+    margin-bottom: 75px;
+}
+
+.form-group input{
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    width: 550px;
+    height: 50px;
+}
+
+
+.login-button {
+    display: block;
+    width: 100%;
+    height: 75px;
+    padding: 0.9rem;
+    background: #2563EB; /* синий */
+    color: white;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 50px;
+    font-size: 1.9rem;
+}
+
+.login-button:hover {
+    background: #1e40af;
+}
+
+@media (max-width: 600px){
+    .background{
+        background: none;
+    }
+    .login-container{
+        width: 100%;
+        height: auto;
+        border-radius: 0px;
+    }
+    .login-container h2{
+        padding: 0px 20px 0px 20px;
+        max-width: 10ch;
+    }
+
+    .form-group{
+        margin-bottom: 35px;
+    }
+    .form-group input{
+        width: 300px;
+        height: 35px;
+    }
+
+    .login-button{
+        height: 70px;
+    }
+
+}
