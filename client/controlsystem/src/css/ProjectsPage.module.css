@@ -14,3 +14,9 @@
     align-items: center;
     gap: 30px;
 }
+
+@media (max-width: 600px){
+    .background{
+        background: #F9F9F9;
+    }
+}

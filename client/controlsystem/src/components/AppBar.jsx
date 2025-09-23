@@ -7,7 +7,7 @@ import Toolbar from '@mui/material/Toolbar';
 const Header = () => {
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ flexGrow: 1, position: 'relative', zIndex: 999 }}>
             <AppBar position="static" sx={{ backgroundColor: '#ffffffff' }}>
                 <Container maxWidth="xl">
                     <Toolbar disableGutters>

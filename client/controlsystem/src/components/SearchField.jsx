@@ -18,7 +18,7 @@ const SearchField = ({ value, onChange, placeholder }) => {
             </InputAdornment>
                         ),
                     }}
-        sx={{width: { xs: '80%', sm: '60%', md: '40%' }}}
+        sx={{width: { md: '50vw', xs: '85vw' }}}
         />
     );
 
