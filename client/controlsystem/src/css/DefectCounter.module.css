@@ -1,0 +1,14 @@
+.parent{
+    display: flex;
+    gap: 35px;
+    background: white;
+    border-radius: 5px;
+    padding: 20px;
+}
+
+
+@media (max-width: 600px){
+    .hideFromMobile{
+        display: none;
+    }
+}

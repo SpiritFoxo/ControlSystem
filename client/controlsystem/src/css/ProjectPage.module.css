@@ -15,8 +15,8 @@
     gap: 30px;
 }
 
-@media (max-width: 600px){
-    .background{
-        background: #F9F9F9;
-    }
+.searchfield{
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }

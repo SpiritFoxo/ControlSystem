@@ -9,7 +9,7 @@ const ProjectsPage = () => {
     return (
         <div className={styles.background}>
             <Header />
-            <div className={styles.contentHolder}>
+            <div className={styles.contentParent}>
                 <SearchField />
                 <div className={styles.projectList}>
                     <CardParent.ProjectCard title="ЖК 'Тест'" onClick={() => console.log("Go to project 1")} />
