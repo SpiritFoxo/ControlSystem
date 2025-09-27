@@ -17,7 +17,6 @@ const ProjectsPage = () => {
                 </div>
 
                 <PaginationField count={10} page={1} onChange={() => console.log("Change page")} />
-                
             </div>
         </div>
     );

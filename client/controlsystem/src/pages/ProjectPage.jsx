@@ -9,6 +9,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import PaginationField from '../components/PaginationField';
+import CardParent from '../components/Cards'
 
 const ProjectPage = () => {
     return (
@@ -51,6 +52,7 @@ const ProjectPage = () => {
                     </FormControl>
                 </div>
 
+                <CardParent.DefectCard></CardParent.DefectCard>
                 <PaginationField></PaginationField>
             </div>
         </div>
