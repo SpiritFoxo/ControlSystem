@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import ProjectsPage from './pages/ProjectsPage';
 import AdminPage from './pages/AdminPage';
 import ProjectPage from './pages/ProjectPage';
+import DefectPage from './pages/DefectPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path='/projects' element={<ProjectsPage />} />
           <Route path='/project' element={<ProjectPage />} />
           <Route path='/admin' element={<AdminPage />} />
+          <Route path='/defect' element={<DefectPage />} />
         </Routes>
       </AuthProvider>
     </Router>
