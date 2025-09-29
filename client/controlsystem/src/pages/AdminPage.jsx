@@ -130,7 +130,7 @@ const AdminPage = () => {
                             <MenuItem value={1}>Инженер</MenuItem>
                             <MenuItem value={2}>Менеджер</MenuItem>
                             <MenuItem value={3}>Руководитель</MenuItem>
-                            <MenuItem value={4}>Алминистратор</MenuItem>
+                            <MenuItem value={4}>Администратор</MenuItem>
                         </Select>
                     </FormControl>
                     <Button variant="contained" onClick={handleSubmit}>Зарегестрировать</Button>
