@@ -5,18 +5,18 @@ import ProjectsPage from './pages/ProjectsPage';
 import AdminPage from './pages/AdminPage';
 import ProjectPage from './pages/ProjectPage';
 import DefectPage from './pages/DefectPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<div>Home Page</div>} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path='/projects' element={<ProjectsPage />} />
-          <Route path='/project' element={<ProjectPage />} />
-          <Route path='/admin' element={<AdminPage />} />
-          <Route path='/defect' element={<DefectPage />} />
+          <Route path='/' element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+          <Route path='/project' element={<ProtectedRoute><ProjectPage /></ProtectedRoute>} />
+          <Route path='/admin' element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path='/defect' element={<ProtectedRoute><DefectPage /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </Router>

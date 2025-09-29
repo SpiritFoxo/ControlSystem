@@ -68,7 +68,7 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	c.SetCookie("refresh_token", refreshToken, maxAge, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"token": token, "user": user.ID})
+	c.JSON(http.StatusOK, gin.H{"token": token, "user_id": user.ID, "role_id": user.Role})
 }
 
 func (s *Server) RefreshTokenHandler(c *gin.Context) {

@@ -7,7 +7,10 @@ import (
 	"ControlSystem/storage"
 	"log"
 	"os"
+	"strings"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -25,6 +28,21 @@ func SetupRouter() *gin.Engine {
 	db := DbInit()
 	minioClient := storage.NewMinioClient(os.Getenv("MINIO_SERVER_URL"), os.Getenv("MINIO_PORT"), os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), []string{"images", "files"}, false)
 	server := handlers.NewServer(db, minioClient)
+
+	r.Use(cors.New(cors.Config{
+		AllowOriginFunc: func(origin string) bool {
+			return strings.HasPrefix(origin, "http://localhost:") || origin == "http://localhost"
+		},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Accept",
+			"Authorization",
+		},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	api := r.Group("api/v1")
 	auth := api.Group("/auth")

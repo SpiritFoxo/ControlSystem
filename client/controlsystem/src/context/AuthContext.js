@@ -6,23 +6,26 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [accessToken, setAccessToken] = useState(null);
     const [userId, setUserId] = useState(null);
+    const [roleId, setRoleId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const setAuthState = useCallback((newAccessToken, newUserId) => {
+    const setAuthState = useCallback((newAccessToken, newUserId, newRoleId) => {
         setAccessToken(newAccessToken);
         setUserId(newUserId);
+        setRoleId(newRoleId);
         api.setAxiosAuthToken(newAccessToken);
     }, []);
 
     const clearAuthState = useCallback(() => {
         setAccessToken(null);
         setUserId(null);
+        setRoleId(null);
         api.clearAxiosAuthToken();
     }, []);
 
-    const login = useCallback((newAccessToken, newUserId) => {
+    const login = useCallback((newAccessToken, newUserId, newRoleId) => {
         console.log("AuthContext: Logging in...");
-        setAuthState(newAccessToken, newUserId);
+        setAuthState(newAccessToken, newUserId, newRoleId);
     }, [setAuthState]);
 
     const logout = useCallback(async (triggeredByRefreshFailure = false) => {
@@ -43,9 +46,9 @@ export const AuthProvider = ({ children }) => {
         console.log("AuthContext: Attempting to refresh token...");
         try {
             const response = await api.authAxiosInstance.post('auth/refresh');
-            const { token: newAccessToken, user_id: newUserId } = response.data;
+            const { token: newAccessToken, user_id: newUserId, role_id: newRoleId } = response.data;
             console.log("AuthContext: Token refreshed successfully.");
-            setAuthState(newAccessToken, newUserId || userId);
+            setAuthState(newAccessToken, newUserId || userId, newRoleId || roleId);
             return newAccessToken;
         } catch (error) {
             console.error("AuthContext: Failed to refresh token:", error);
@@ -98,6 +101,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         accessToken,
         userId,
+        roleId,
         isAuthenticated: !!accessToken,
         isLoading,
         login,
