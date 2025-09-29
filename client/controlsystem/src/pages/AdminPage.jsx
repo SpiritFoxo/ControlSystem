@@ -50,7 +50,7 @@ const AdminPage = () => {
         }
 
         try {
-            const response = await RegisterNewUser(
+            await RegisterNewUser(
                 formData.firstName,
                 formData.middleName,
                 formData.lastName,
