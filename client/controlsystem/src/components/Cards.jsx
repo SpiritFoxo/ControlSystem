@@ -59,30 +59,37 @@ const MobileProjectCard = ({ title, photoUrl, onClick }) => {
     );
 }
 
-const DefectCard = ({title, authorName, defectStatus, defectName}) => {
+const DefectCard = ({ title, authorName, defectStatus, defectName, photoUrl }) => {
     return (
-    <Card sx={{ minWidth: 320, maxWidth: 340, minHeight: 360, maxHeight: 360 }}>
-        <CardContent sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-            <Typography>Фамилия имя</Typography>
-            <div style={{background: 'red', borderRadius: '999px'}}></div>
-        </CardContent>
-      <CardMedia
-        sx={{ height: 185 }}
-        image="/images/placeholder-project-desktop.jpg"
-        title="green iguana"
-      />
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
-          Название
-        </Typography>
-      </CardContent>
-      <CardActions>
-        <Button size="small">Редактировать</Button>
-        <Button size="small">Удалить</Button>
-      </CardActions>
-    </Card>
+        <Card sx={{ minWidth: 320, maxWidth: 340, minHeight: 360, maxHeight: 360 }}>
+            <CardContent sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <Typography>{authorName}</Typography>
+                <div
+                    style={{
+                        background: defectStatus === 1 ? "yellow" : "red",
+                        borderRadius: "999px",
+                        width: 10,
+                        height: 10,
+                    }}
+                ></div>
+            </CardContent>
+            <CardMedia
+                sx={{ height: 185 }}
+                image={photoUrl || "/images/placeholder-project-desktop.jpg"}
+                title={defectName}
+            />
+            <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                    {title || defectName}
+                </Typography>
+            </CardContent>
+            <CardActions>
+                <Button size="small">Редактировать</Button>
+                <Button size="small">Удалить</Button>
+            </CardActions>
+        </Card>
     );
-}
+};
 
 const CardParent = {
     ProjectCard,

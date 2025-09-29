@@ -20,3 +20,13 @@
     align-items: center;
     gap: 10px;
 }
+
+.defectList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+}
+.error {
+    color: red;
+}

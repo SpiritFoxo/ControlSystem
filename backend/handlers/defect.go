@@ -83,7 +83,7 @@ func (s *Server) CreateDefect(c *gin.Context) {
 
 func (s *Server) GetDefects(c *gin.Context) {
 	type GetDefectsInput struct {
-		ProjectID uint `json:"projectId" binding:"required"`
+		ProjectID uint `form:"projectId" binding:"required"`
 	}
 
 	type UserResponse struct {
@@ -97,6 +97,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 		ID        uint          `json:"id"`
 		Title     string        `json:"title"`
 		Priority  uint          `json:"priority"`
+		Status    uint          `json:"status"`
 		CreatedBy uint          `json:"createdBy"`
 		Creator   *UserResponse `json:"creator,omitempty"`
 		PhotoUrl  string        `json:"photoUrl,omitempty"`
@@ -118,7 +119,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 	}
 
 	var input GetDefectsInput
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBindQuery(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -135,11 +136,11 @@ func (s *Server) GetDefects(c *gin.Context) {
 		return
 	}
 
-	if err := s.db.Preload("Creator").Preload("Assignee").Model(&models.Defect{}).
+	if err := s.db.Preload("Creator").Model(&models.Defect{}).
 		Where("project_id = ?", input.ProjectID).
 		Offset(offset).
 		Limit(limit).
-		Scan(&defects).Error; err != nil {
+		Find(&defects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -179,11 +180,11 @@ func (s *Server) GetDefects(c *gin.Context) {
 			ID:        d.ID,
 			Title:     d.Title,
 			Priority:  d.Priority,
+			Status:    d.Status,
 			CreatedBy: d.CreatedBy,
 			Creator:   creator,
 		}
 
-		// если есть вложения, берём первое и генерируем ссылку
 		if atts, ok := attachmentsMap[d.ID]; ok && len(atts) > 0 {
 			url, err := s.MinIo.GetFileURL(atts[0].FilePath, atts[0].FileName, 24*time.Hour)
 			if err == nil {
