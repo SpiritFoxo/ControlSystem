@@ -14,9 +14,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path='/' element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
-          <Route path='/project' element={<ProtectedRoute><ProjectPage /></ProtectedRoute>} />
+          <Route path='/project/:projectId' element={<ProtectedRoute><ProjectPage /></ProtectedRoute>} />
           <Route path='/admin' element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
-          <Route path='/defect' element={<ProtectedRoute><DefectPage /></ProtectedRoute>} />
+          <Route path='/defect/:defectId' element={<ProtectedRoute><DefectPage /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </Router>

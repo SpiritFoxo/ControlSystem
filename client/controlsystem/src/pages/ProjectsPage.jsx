@@ -45,7 +45,7 @@ const ProjectsPage = () => {
                         <CardParent.ProjectCard
                             key={project.id}
                             title={project.name}
-                            image={project.photoUrl}
+                            photoUrl={project.photoUrl}
                             onClick={() => console.log("Go to project", project.id)}
                         />
                     ))}
@@ -54,7 +54,7 @@ const ProjectsPage = () => {
                         <CardParent.MobileProjectCard
                             key={`mobile-${project.id}`}
                             title={project.name}
-                            image={project.photoUrl}
+                            photoUrl={project.photoUrl}
                             onClick={() => console.log("Go to project", project.id)}
                         />
                     ))}

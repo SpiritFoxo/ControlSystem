@@ -6,7 +6,8 @@ import CardMedia from "@mui/material/CardMedia";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 
-const ProjectCard = ({ title, onClick }) => {
+const ProjectCard = ({ title, photoUrl, onClick }) => {
+    const imagePhoto = photoUrl || "/images/placeholder-project-desktop.jpg";
     return (
         <Card
         sx={{
@@ -19,7 +20,7 @@ const ProjectCard = ({ title, onClick }) => {
         >
             <CardMedia
                 sx={{ height: 200 }}
-                image="/images/placeholder-project-desktop.jpg"
+                image={imagePhoto}
             />
             <CardContent>
                 <Typography variant="h5">
@@ -30,7 +31,8 @@ const ProjectCard = ({ title, onClick }) => {
     );
 }
 
-const MobileProjectCard = ({ title, onClick }) => {
+const MobileProjectCard = ({ title, photoUrl, onClick }) => {
+    const imagePhoto = photoUrl || "/images/placeholder-project-desktop.jpg";
     return(
         <Card
         sx={{
@@ -46,7 +48,7 @@ const MobileProjectCard = ({ title, onClick }) => {
         >
             <CardMedia
                 sx={{ height: 75, width: 100 }}
-                image="/images/placeholder-project-desktop.jpg"
+                image={imagePhoto}
             />
             <CardContent>
                 <Typography variant="h5" sx={{ maxWidth: '12ch', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
