@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/AppBar";
 import SearchField from "../components/SearchField";
 import styles from "../css/ProjectsPage.module.css";
 import PaginationField from "../components/PaginationField";
 import CardParent from "../components/Cards";
 import { fetchAllProjects } from "../api/Projects";
+import AddEntityModal from "../components/Modals";
 
 const ProjectsPage = () => {
+    const nav = useNavigate();
+
+    const handleProjectClick = (projectId) => {
+        nav(`/project/${projectId}`);
+    }
     const [projects, setProjects] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
     const [loading, setLoading] = useState(true);
@@ -35,7 +42,10 @@ const ProjectsPage = () => {
         <div className={styles.background}>
             <Header />
             <div className={styles.contentParent}>
+                <div>
                 <SearchField />
+                <AddEntityModal entityType={'project'}></AddEntityModal>
+                </div>
 
                 {loading && <p>Загрузка...</p>}
                 {error && <p className={styles.error}>{error}</p>}
@@ -46,7 +56,7 @@ const ProjectsPage = () => {
                             key={project.id}
                             title={project.name}
                             photoUrl={project.photoUrl}
-                            onClick={() => console.log("Go to project", project.id)}
+                            onClick={() => handleProjectClick(project.id)}
                         />
                     ))}
 
@@ -55,7 +65,7 @@ const ProjectsPage = () => {
                             key={`mobile-${project.id}`}
                             title={project.name}
                             photoUrl={project.photoUrl}
-                            onClick={() => console.log("Go to project", project.id)}
+                            onClick={() => handleProjectClick(project.id)}
                         />
                     ))}
                 </div>

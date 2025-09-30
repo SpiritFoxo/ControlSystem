@@ -12,7 +12,7 @@ import MenuItem from "@mui/material/MenuItem";
 import PaginationField from '../components/PaginationField';
 import CardParent from '../components/Cards'
 import { fetchAllDefects } from '../api/Defects';
-import AddDefectModal from "../components/Modals";
+import AddEntityModals from "../components/Modals";
 
 
 const ProjectPage = () => {
@@ -87,7 +87,7 @@ const ProjectPage = () => {
                             <MenuItem value={2}>Просрочен</MenuItem>
                         </Select>
                     </FormControl>
-                    <AddDefectModal projectId={projectId}></AddDefectModal>
+                    <AddEntityModals entityType={'defect'} projectId={projectId}></AddEntityModals>
                 </div>
 
                 {loading && <p>Загрузка...</p>}

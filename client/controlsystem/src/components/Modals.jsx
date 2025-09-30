@@ -7,6 +7,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import { createDefect } from '../api/Defects';
+import { createProject } from '../api/Projects';
 import { uploadAttachment } from '../api/Attachments';
 
 const style = {
@@ -25,11 +26,12 @@ const style = {
   textAlign: 'center',
 };
 
-const AddDefectModal = ({projectId}) => {
-    const [open, setOpen] = React.useState(false);
+const AddEntityModal = ({ entityType, projectId }) => {
+  const [open, setOpen] = React.useState(false);
   const [files, setFiles] = React.useState([]);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
@@ -57,27 +59,41 @@ const AddDefectModal = ({projectId}) => {
     }
 
     try {
-      const response = await createDefect(projectId, title, description);
-      const defectId = response.data.defect?.ID;
+      let response;
+      let entityId;
+      switch (entityType) {
+        case 'project':
+          response = await createProject(title, description);
+          entityId = response.project_id;
+          break;
+        case 'defect':
+          response = await createDefect(projectId, title, description);
+          entityId = response.data.defect?.ID;
+          break;
+        default:
+          throw new Error('Неизвестный тип сущности');
+      }
+
       for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('defectId', defectId);
-
+        formData.append(entityType === 'project' ? 'projectId' : 'defectId', entityId);
         await uploadAttachment(formData);
       }
 
-      alert('Дефект и вложения успешно добавлены!');
+      alert(`${entityType === 'project' ? 'Проект' : 'Дефект'} и вложения успешно добавлены!`);
       handleClose();
     } catch (err) {
-      console.error('Ошибка при добавлении дефекта или вложений:', err);
-      alert('Произошла ошибка при добавлении дефекта или вложений.');
+      console.error(`Ошибка при добавлении ${entityType === 'project' ? 'проекта' : 'дефекта'} или вложений:`, err);
+      alert(`Произошла ошибка при добавлении ${entityType === 'project' ? 'проекта' : 'дефекта'} или вложений.`);
     }
   };
 
   return (
     <div>
-      <Button onClick={handleOpen}>Сообщить о дефекте</Button>
+      <Button onClick={handleOpen}>
+        {entityType === 'project' ? 'Создать проект' : 'Сообщить о дефекте'}
+      </Button>
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
@@ -94,7 +110,7 @@ const AddDefectModal = ({projectId}) => {
         <Fade in={open}>
           <Box sx={style}>
             <Typography id="transition-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
-              Добавить новый дефект
+              {entityType === 'project' ? 'Добавить новый проект' : 'Добавить новый дефект'}
             </Typography>
             <TextField
               placeholder="Заголовок"
@@ -114,7 +130,7 @@ const AddDefectModal = ({projectId}) => {
             />
             <input
               type="file"
-              accept="image/*,application/pdf"
+              accept={entityType === 'project' ? 'image/*' : 'image/*,application/pdf'}
               onChange={handleFileChange}
               style={{ marginBottom: '16px' }}
               multiple
@@ -129,6 +145,6 @@ const AddDefectModal = ({projectId}) => {
       </Modal>
     </div>
   );
-}
+};
 
-export default AddDefectModal;
+export default AddEntityModal;

@@ -3,7 +3,6 @@ package handlers
 import (
 	"ControlSystem/models"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,7 +21,6 @@ func (s *Server) CreateDefect(c *gin.Context) {
 	roleId := c.GetUint("role")
 
 	if roleId != 1 {
-		fmt.Println(roleId)
 		c.JSON(403, gin.H{"error": "forbidden: only engineers can create defects"})
 		return
 	}

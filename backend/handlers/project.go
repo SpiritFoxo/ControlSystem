@@ -4,7 +4,6 @@ import (
 	"ControlSystem/models"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -28,9 +27,7 @@ func (s *Server) CreateProject(c *gin.Context) {
 		return
 	}
 
-	log.Println(roleId.(uint))
-
-	if roleId.(uint) < 2 || roleId.(uint) >= 4 {
+	if roleId.(uint) < 3 {
 		c.JSON(403, gin.H{"error": "forbidden"})
 		return
 	}
@@ -51,7 +48,7 @@ func (s *Server) CreateProject(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, project.ID)
+	c.JSON(201, gin.H{"project_id": project.ID})
 }
 
 func (s *Server) EditProjectInfo(c *gin.Context) {

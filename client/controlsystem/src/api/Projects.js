@@ -10,3 +10,16 @@ export const fetchAllProjects = async () => {
         throw new Error(err.response?.data?.error || err.message || "Failed to fetch projects information");
     }
 }
+
+export const createProject = async (title, description) => {
+    try{
+        const response = await api.axiosInstance.post('/projects/', {
+            name: title,
+            description: description,
+        })
+        return response.data;
+    }
+    catch (err){
+        throw new Error(`Ошибка при создании проекта: ${err.message}`);
+    }
+}
