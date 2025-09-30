@@ -11,6 +11,15 @@ export const fetchAllDefects = async (projectId, { page = 1} = {}) => {
     }
 }
 
+export const fetchDefectById = async (defectId) =>{
+    try{
+        const response = await api.axiosInstance.get(`/defects/${defectId}`);
+        return response.data;
+    }
+    catch (err){
+
+    }
+}
 
 export const createDefect = async (project_id, title, description) => {
     try{
@@ -26,3 +35,32 @@ export const createDefect = async (project_id, title, description) => {
         throw new Error(err.response?.data?.error || err.message)
     }
 }
+
+export const editDefect = async (defectId, title, description, priority, status) => {
+    try{
+        const response = await api.axiosInstance.patch(`/defects/${defectId}`, {
+            title: title,
+            description: description,
+            priority: priority,
+            status: status,
+        });
+        return response.data;
+    }
+    catch (err){
+        
+    }
+}
+
+export const leaveComment = async (defectId, comment) =>{
+    try{
+        const response = await api.axiosInstance.post(`/defects/${defectId}/comments`, {
+            content: comment,
+        });
+        return response.data;
+    }
+    catch (err){
+        
+    }
+}
+
+

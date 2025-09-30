@@ -23,3 +23,17 @@ export const createProject = async (title, description) => {
         throw new Error(`Ошибка при создании проекта: ${err.message}`);
     }
 }
+
+export const editProject = async (projectId, projectName, description, status) => {
+    try{
+        const response = await api.axiosInstance.patch(`/projects/${projectId}`, {
+            name: projectName,
+            description: description,
+            status: status,
+        });
+        return response.data;
+    }
+    catch (err){
+
+    }
+}

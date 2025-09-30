@@ -12,7 +12,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import {SearchField} from "../components/SearchField";
 import {PaginationField} from "../components/PaginationField";
-import { RegisterNewUser } from "../api/Admin";
+import { registerNewUser } from "../api/Admin";
 
 const AdminPage = () => {
     const [formData, setFormData] = useState({
@@ -51,7 +51,7 @@ const AdminPage = () => {
         }
 
         try {
-            await RegisterNewUser(
+            await registerNewUser(
                 formData.firstName,
                 formData.middleName,
                 formData.lastName,
