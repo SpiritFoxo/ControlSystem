@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import { AdminTable } from "../components/AdminTable";
 import {Header} from "../components/AppBar";
-import bakground from "../css/Background.module.css";
+import background from "../css/Background.module.css";
 import styles from '../css/AdminPage.module.css';
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -13,6 +13,7 @@ import Button from "@mui/material/Button";
 import {SearchField} from "../components/SearchField";
 import {PaginationField} from "../components/PaginationField";
 import { registerNewUser } from "../api/Admin";
+import { getAllUsers } from "../api/Admin";
 
 const AdminPage = () => {
     const [formData, setFormData] = useState({
@@ -24,6 +25,18 @@ const AdminPage = () => {
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [page, setPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [userUpdateTrigger, setUserUpdateTrigger] = useState(0);
+    const [pagination, setPagination] = useState({ limit: 10, page: 1, total: 0, totalPages: 1 });
+
+    useEffect(() => {
+        const fetchPagination = async () => {
+            const { pagination } = await getAllUsers({ page, search: searchQuery });
+            setPagination(pagination);
+        };
+        fetchPagination();
+    }, [page, searchQuery, userUpdateTrigger]);
 
     const handleInputChange = (e) => {
         const { id, value } = e.target;
@@ -66,17 +79,27 @@ const AdminPage = () => {
                 email: '',
                 role: ''
             });
+            setUserUpdateTrigger((prev) => prev + 1);
         } catch (err) {
             setError('Ошибка при регистрации пользователя: ' + (err.response?.data?.message || err.message));
         }
     };
 
-    return(
-        <div className={bakground.background}>
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        setPage(1); 
+    };
+
+    const handlePageChange = (newPage) => {
+        setPage(newPage);
+    };
+
+    return (
+        <div className={background.background}>
             <Header />
-            <div className={bakground.contentParent}>
+            <div className={background.contentParent}>
                 <div className={styles.userCreationParent}>
-                    <Typography variant="h4" sx={{ mb: 5 }}>Зарегестрировать пользователя</Typography>
+                    <Typography variant="h4" sx={{ mb: 5 }}>Зарегистрировать пользователя</Typography>
                     <div className={styles.userCreationMenu}>
                         <TextField
                             required
@@ -97,10 +120,9 @@ const AdminPage = () => {
                             onChange={handleInputChange}
                         />
                         <TextField
-                            required
                             id="middleName"
                             name="middleName"
-                            label="Обязательное поле"
+                            label="Отчество"
                             placeholder="Отчество"
                             value={formData.middleName}
                             onChange={handleInputChange}
@@ -115,39 +137,48 @@ const AdminPage = () => {
                             onChange={handleInputChange}
                         />
                         <FormControl sx={{ m: 1, minWidth: 80 }}>
-                        <InputLabel id="demo-simple-select-autowidth-label">Роль</InputLabel>
-                        <Select
-                            labelId="role-select-label"
-                            id="role"
-                            name="role"
-                            value={formData.role}
-                            onChange={handleRoleChange}
-                            autoWidth
-                            label="Роль"
-                        >
-                        <MenuItem value="">
-                            <em>None</em>
-                        </MenuItem>
-                            <MenuItem value={1}>Инженер</MenuItem>
-                            <MenuItem value={2}>Менеджер</MenuItem>
-                            <MenuItem value={3}>Руководитель</MenuItem>
-                            <MenuItem value={4}>Администратор</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <Button variant="contained" onClick={handleSubmit}>Зарегестрировать</Button>
+                            <InputLabel id="role-select-label">Роль</InputLabel>
+                            <Select
+                                labelId="role-select-label"
+                                id="role"
+                                name="role"
+                                value={formData.role}
+                                onChange={handleRoleChange}
+                                autoWidth
+                                label="Роль"
+                            >
+                                <MenuItem value="">
+                                    <em>Выберите роль</em>
+                                </MenuItem>
+                                <MenuItem value={1}>Инженер</MenuItem>
+                                <MenuItem value={2}>Менеджер</MenuItem>
+                                <MenuItem value={3}>Руководитель</MenuItem>
+                                <MenuItem value={4}>Администратор</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <Button variant="contained" onClick={handleSubmit}>Зарегистрировать</Button>
                     </div>
                     {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
                     {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
                     <div className={styles.userControlMenu}>
                         <Typography variant="h4">Управление</Typography>
-                        <SearchField></SearchField>
-                        <PaginationField></PaginationField>
-                    </div> 
+                        <SearchField onSearch={handleSearch} />
+                        <PaginationField
+                            onPageChange={handlePageChange}
+                            totalPages={pagination.totalPages}
+                            currentPage={page}
+                        />
+                    </div>
                 </div>
-                <AdminTable tableWidth={"74vw"} />
+                <AdminTable
+                    tableWidth={"74vw"}
+                    page={page}
+                    searchQuery={searchQuery}
+                    onUserUpdate={userUpdateTrigger}
+                />
             </div>
         </div>
     );
-}
+};
 
 export default AdminPage

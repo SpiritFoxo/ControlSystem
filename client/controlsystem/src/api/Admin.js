@@ -34,12 +34,18 @@ export const editUser = async (userId, firstName, middleName, lastName, role, is
 }
 
 
-export const getAllUsers = async ({page = 1} = {}) => {
+export const getAllUsers = async ({ page = 1, search = '' } = {}) => {
     try {
-        const response = await api.axiosInstance.get(`/admin/page=${page}`);
-        return response.data;
+        const response = await api.axiosInstance.get(`/admin/get-users?page=${page}&search=${search}`);
+        return {
+            users: Array.isArray(response.data.users) ? response.data.users : [],
+            pagination: response.data.pagination || { limit: 10, page: 1, total: 0, totalPages: 1 }
+        };
+    } catch (err) {
+        console.error('Ошибка в getAllUsers:', err);
+        return {
+            users: [],
+            pagination: { limit: 10, page: 1, total: 0, totalPages: 1 }
+        };
     }
-    catch (err){
-
-    }
-}
+};

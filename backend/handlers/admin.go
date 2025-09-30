@@ -195,7 +195,7 @@ func (s *Server) GetUsers(c *gin.Context) {
 	}
 
 	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "4")
+	limitStr := c.DefaultQuery("limit", "10")
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
@@ -235,7 +235,15 @@ func (s *Server) GetUsers(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{
+		"users": response,
+		"pagination": gin.H{
+			"page":       page,
+			"limit":      limit,
+			"total":      total,
+			"totalPages": (total + int64(limit) - 1) / int64(limit),
+		},
+	})
 }
 
 func generateCorporateEmail(firstName, lastName string, db *gorm.DB) string {
