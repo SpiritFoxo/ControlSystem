@@ -1,7 +1,7 @@
 .background{
     background: -webkit-linear-gradient(0deg, #03040c,#030417,#0c0326);
     background: linear-gradient(0deg, #03040c,#030417,#0c0326);
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .contentParent{
@@ -13,6 +13,15 @@
     flex-direction: column;
     align-items: center;
     gap: 30px;
+    flex-grow: 1;
+    min-height: 0;
+}
+.projectList {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
 }
 
 @media (max-width: 600px){

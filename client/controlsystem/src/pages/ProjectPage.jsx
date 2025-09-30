@@ -9,10 +9,10 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
 import PaginationField from '../components/PaginationField';
 import CardParent from '../components/Cards'
 import { fetchAllDefects } from '../api/Defects';
+import AddDefectModal from "../components/Modals";
 
 
 const ProjectPage = () => {
@@ -87,6 +87,7 @@ const ProjectPage = () => {
                             <MenuItem value={2}>Просрочен</MenuItem>
                         </Select>
                     </FormControl>
+                    <AddDefectModal projectId={projectId}></AddDefectModal>
                 </div>
 
                 {loading && <p>Загрузка...</p>}

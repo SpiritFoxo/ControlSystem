@@ -3,6 +3,7 @@ package handlers
 import (
 	"ControlSystem/models"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,16 +16,13 @@ func (s *Server) CreateDefect(c *gin.Context) {
 	type CreateDefectInput struct {
 		Title       string `json:"title" binding:"required,min=3"`
 		Description string `json:"description" binding:"required"`
-		ProjectID   uint   `json:"projectId" binding:"required"`
+		ProjectID   uint   `json:"project_id" binding:"required"`
 	}
 
-	roleId, exists := c.Get("role")
-	if !exists {
-		c.JSON(401, gin.H{"error": "unauthorized"})
-		return
-	}
+	roleId := c.GetUint("role")
 
-	if roleId.(uint) != 1 {
+	if roleId != 1 {
+		fmt.Println(roleId)
 		c.JSON(403, gin.H{"error": "forbidden: only engineers can create defects"})
 		return
 	}
@@ -67,6 +65,7 @@ func (s *Server) CreateDefect(c *gin.Context) {
 		Description: input.Description,
 		ProjectID:   input.ProjectID,
 		CreatedBy:   userId.(uint),
+		AssignedTo:  userId.(uint),
 		Status:      1,
 	}
 

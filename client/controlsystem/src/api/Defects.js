@@ -10,3 +10,19 @@ export const fetchAllDefects = async (projectId, { page = 1} = {}) => {
         throw new Error(err.response?.data?.error || err.message || "Failed to fetch projects information");
     }
 }
+
+
+export const createDefect = async (project_id, title, description) => {
+    try{
+        const response = await api.axiosInstance.post(`/defects/`, {
+            title: title,
+            description: description,
+            project_id: parseInt(project_id, 10),
+        })
+        return response;
+    }
+    catch (err){
+        console.error(err.response || err.message || err)
+        throw new Error(err.response?.data?.error || err.message)
+    }
+}

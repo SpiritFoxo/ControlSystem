@@ -14,7 +14,7 @@ type Defect struct {
 	Description string
 	Priority    uint `gorm:"not null"` // 1 - low, 2 - medium, 3 - high
 	Status      uint `gorm:"not null"` // 1 - open, 2 - in progress, 3 - resolved, 4 - overdue
-	AssignedTo  uint `gorm:"not null, index"`
+	AssignedTo  uint `gorm:"index"`
 	Assignee    User `gorm:"foreignKey:AssignedTo"`
 	CreatedBy   uint `gorm:"not null, index"`
 	Creator     User `gorm:"foreignKey:CreatedBy"`

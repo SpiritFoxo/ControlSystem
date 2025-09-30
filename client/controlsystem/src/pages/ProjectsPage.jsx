@@ -17,8 +17,8 @@ const ProjectsPage = () => {
         setError(null);
         try {
             const response = await fetchAllProjects(page);
-            setProjects(response.data.projects);
-            setPagination(response.data.pagination);
+            setProjects(response.data.projects || []);
+            setPagination(response.data.pagination || { page: 1, totalPages: 1 });
         } catch (err) {
             console.error("Ошибка загрузки проектов:", err);
             setError("Не удалось загрузить проекты");

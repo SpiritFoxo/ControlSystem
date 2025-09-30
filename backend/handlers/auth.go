@@ -114,5 +114,6 @@ func (s *Server) RefreshTokenHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"token":   newAccessToken,
 		"user_id": user.ID,
+		"role":    user.Role,
 	})
 }
