@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/AppBar";
 import SearchField from "../components/SearchField";
 import styles from "../css/ProjectsPage.module.css";
+import bakground from "../css/Background.module.css";
 import PaginationField from "../components/PaginationField";
 import CardParent from "../components/Cards";
 import { fetchAllProjects } from "../api/Projects";
@@ -39,9 +40,9 @@ const ProjectsPage = () => {
     }, []);
 
     return (
-        <div className={styles.background}>
+        <div className={bakground.background}>
             <Header />
-            <div className={styles.contentParent}>
+            <div className={bakground.contentParent}>
                 <div>
                 <SearchField />
                 <AddEntityModal entityType={'project'}></AddEntityModal>

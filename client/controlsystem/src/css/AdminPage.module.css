@@ -1,20 +1,3 @@
-.background {
-    background: -webkit-linear-gradient(0deg, #03040c,#030417,#0c0326);
-    background: linear-gradient(0deg, #03040c,#030417,#0c0326);
-    height: 100vh;
-}
-
-.contentHolder{
-    padding-top: 40px;
-    width: 90%;
-    background: #F9F9F9;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
-}
-
 .userCreationParent{
     display: flex;
     min-width: 90%;

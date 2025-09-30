@@ -2,6 +2,7 @@ import { useState } from "react";
 import Typography from "@mui/material/Typography";
 import AdminTable from "../components/AdminTable";
 import Header from "../components/AppBar";
+import bakground from "../css/Background.module.css";
 import styles from '../css/AdminPage.module.css';
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -71,9 +72,9 @@ const AdminPage = () => {
     };
 
     return(
-        <div className={styles.background}>
+        <div className={bakground.background}>
             <Header />
-            <div className={styles.contentHolder}>
+            <div className={bakground.contentParent}>
                 <div className={styles.userCreationParent}>
                     <Typography variant="h4" sx={{ mb: 5 }}>Зарегестрировать пользователя</Typography>
                     <div className={styles.userCreationMenu}>

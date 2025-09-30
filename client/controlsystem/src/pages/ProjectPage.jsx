@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from '@mui/material/Typography';
 import Header from '../components/AppBar';
-import styles from '../css/ProjectPage.module.css'
+import styles from '../css/ProjectPage.module.css';
+import bakground from "../css/Background.module.css";
 import DefectCounter from '../components/DefectsCounter';
 import SearchField from '../components/SearchField';
 import FormControl from "@mui/material/FormControl";
@@ -50,9 +51,9 @@ const ProjectPage = () => {
     }, [projectId]);
 
     return (
-        <div className={styles.background}>
+        <div className={bakground.background}>
             <Header />
-            <div className={styles.contentParent}>
+            <div className={bakground.contentParent}>
                 <Typography variant="h4">ЖК "Тест"</Typography>
                 <DefectCounter />
                 <div className={styles.searchfield}>
