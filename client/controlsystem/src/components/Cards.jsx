@@ -15,7 +15,9 @@ export const ProjectCard = ({ title, photoUrl, onClick }) => {
             maxWidth: 240,
             minHeight: 350,
             minWidth: 240,
+            cursor: "pointer",
         }}
+        onClick={onClick}
         >
             <CardMedia
                 sx={{ height: 200 }}
@@ -44,6 +46,7 @@ export const MobileProjectCard = ({ title, photoUrl, onClick }) => {
             maxHeight: 200,
             width: "85vw"
         }}
+        onClick={onClick}
         >
             <CardMedia
                 sx={{ height: 75, width: 100 }}
@@ -58,9 +61,9 @@ export const MobileProjectCard = ({ title, photoUrl, onClick }) => {
     );
 }
 
-export const DefectCard = ({ title, authorName, defectStatus, defectName, photoUrl }) => {
+export const DefectCard = ({ title, authorName, defectStatus, defectName, photoUrl, onClick }) => {
     return (
-        <Card sx={{ minWidth: 320, maxWidth: 340, minHeight: 360, maxHeight: 360 }}>
+        <Card sx={{ minWidth: 320, maxWidth: 340, minHeight: 360, maxHeight: 360 }} onClick={onClick}>
             <CardContent sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
                 <Typography>{authorName}</Typography>
                 <div

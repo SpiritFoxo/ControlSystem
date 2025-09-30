@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Typography from '@mui/material/Typography';
 import {Header} from '../components/AppBar';
 import styles from '../css/ProjectPage.module.css';
@@ -17,6 +17,11 @@ import {AddEntityModal} from "../components/Modals";
 
 
 const ProjectPage = () => {
+    const nav = useNavigate();
+
+    const handleDefectClick = (defectId) => {
+        nav(`/defect/${defectId}`);
+    }
     const { projectId } = useParams();
     const [defects, setDefects] = useState([]);
     const [pagination, setPagination] = useState({
@@ -108,6 +113,7 @@ const ProjectPage = () => {
                                 defectStatus={defectStatus}
                                 defectName={defectName}
                                 photoUrl={defect.photoUrl}
+                                onClick={handleDefectClick}
                             />
                         );
                     })}
