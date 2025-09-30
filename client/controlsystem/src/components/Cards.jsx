@@ -3,10 +3,9 @@ import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
-import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 
-const ProjectCard = ({ title, photoUrl, onClick }) => {
+export const ProjectCard = ({ title, photoUrl, onClick }) => {
     const imagePhoto = photoUrl || "/images/placeholder-project-desktop.jpg";
     return (
         <Card
@@ -31,7 +30,7 @@ const ProjectCard = ({ title, photoUrl, onClick }) => {
     );
 }
 
-const MobileProjectCard = ({ title, photoUrl, onClick }) => {
+export const MobileProjectCard = ({ title, photoUrl, onClick }) => {
     const imagePhoto = photoUrl || "/images/placeholder-project-desktop.jpg";
     return(
         <Card
@@ -59,7 +58,7 @@ const MobileProjectCard = ({ title, photoUrl, onClick }) => {
     );
 }
 
-const DefectCard = ({ title, authorName, defectStatus, defectName, photoUrl }) => {
+export const DefectCard = ({ title, authorName, defectStatus, defectName, photoUrl }) => {
     return (
         <Card sx={{ minWidth: 320, maxWidth: 340, minHeight: 360, maxHeight: 360 }}>
             <CardContent sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
@@ -90,11 +89,3 @@ const DefectCard = ({ title, authorName, defectStatus, defectName, photoUrl }) =
         </Card>
     );
 };
-
-const CardParent = {
-    ProjectCard,
-    MobileProjectCard,
-    DefectCard
-}
-
-export default CardParent;

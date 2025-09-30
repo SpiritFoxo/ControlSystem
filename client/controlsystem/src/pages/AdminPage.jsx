@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Typography from "@mui/material/Typography";
-import AdminTable from "../components/AdminTable";
-import Header from "../components/AppBar";
+import { AdminTable } from "../components/AdminTable";
+import {Header} from "../components/AppBar";
 import bakground from "../css/Background.module.css";
 import styles from '../css/AdminPage.module.css';
 import FormControl from "@mui/material/FormControl";
@@ -10,8 +10,8 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import SearchField from "../components/SearchField";
-import PaginationField from "../components/PaginationField";
+import {SearchField} from "../components/SearchField";
+import {PaginationField} from "../components/PaginationField";
 import { RegisterNewUser } from "../api/Admin";
 
 const AdminPage = () => {

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/AppBar";
-import SearchField from "../components/SearchField";
+import {Header} from "../components/AppBar";
+import {SearchField} from "../components/SearchField";
 import styles from "../css/ProjectsPage.module.css";
 import bakground from "../css/Background.module.css";
-import PaginationField from "../components/PaginationField";
-import CardParent from "../components/Cards";
+import {PaginationField} from "../components/PaginationField";
+import {ProjectCard, MobileProjectCard} from "../components/Cards";
 import { fetchAllProjects } from "../api/Projects";
-import AddEntityModal from "../components/Modals";
+import {AddEntityModal} from "../components/Modals";
 
 const ProjectsPage = () => {
     const nav = useNavigate();
@@ -53,7 +53,7 @@ const ProjectsPage = () => {
 
                 <div className={styles.projectList}>
                     {projects.map((project) => (
-                        <CardParent.ProjectCard
+                        <ProjectCard
                             key={project.id}
                             title={project.name}
                             photoUrl={project.photoUrl}
@@ -62,7 +62,7 @@ const ProjectsPage = () => {
                     ))}
 
                     {projects.map((project) => (
-                        <CardParent.MobileProjectCard
+                        <MobileProjectCard
                             key={`mobile-${project.id}`}
                             title={project.name}
                             photoUrl={project.photoUrl}

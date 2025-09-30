@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from '@mui/material/Typography';
-import Header from '../components/AppBar';
+import {Header} from '../components/AppBar';
 import styles from '../css/ProjectPage.module.css';
 import bakground from "../css/Background.module.css";
-import DefectCounter from '../components/DefectsCounter';
-import SearchField from '../components/SearchField';
+import {DefectCounter} from '../components/DefectsCounter';
+import {SearchField} from '../components/SearchField';
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import PaginationField from '../components/PaginationField';
-import CardParent from '../components/Cards'
+import {PaginationField} from '../components/PaginationField';
+import {DefectCard} from '../components/Cards'
 import { fetchAllDefects } from '../api/Defects';
-import AddEntityModals from "../components/Modals";
+import {AddEntityModal} from "../components/Modals";
 
 
 const ProjectPage = () => {
@@ -88,7 +88,7 @@ const ProjectPage = () => {
                             <MenuItem value={2}>Просрочен</MenuItem>
                         </Select>
                     </FormControl>
-                    <AddEntityModals entityType={'defect'} projectId={projectId}></AddEntityModals>
+                    <AddEntityModal entityType={'defect'} projectId={projectId}></AddEntityModal>
                 </div>
 
                 {loading && <p>Загрузка...</p>}
@@ -101,7 +101,7 @@ const ProjectPage = () => {
                         const defectName = defect.title; 
 
                         return (
-                            <CardParent.DefectCard
+                            <DefectCard
                                 key={defect.id}
                                 title={defectName}
                                 authorName={authorName}

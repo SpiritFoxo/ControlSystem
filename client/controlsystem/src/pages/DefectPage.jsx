@@ -1,5 +1,5 @@
 import Typography from '@mui/material/Typography';
-import Header from '../components/AppBar';
+import {Header} from '../components/AppBar';
 import styles from '../css/DefectPage.module.css';
 import bakground from "../css/Background.module.css";
 

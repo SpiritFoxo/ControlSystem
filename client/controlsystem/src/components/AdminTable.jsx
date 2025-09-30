@@ -4,7 +4,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 
-const AdminTable = ({tableWidth}) => {
+export const AdminTable = ({tableWidth}) => {
     return (
         <TableContainer sx={{ width: tableWidth}}>
             <Table>
@@ -22,5 +22,3 @@ const AdminTable = ({tableWidth}) => {
         </TableContainer>
     );
 }
-
-export default AdminTable

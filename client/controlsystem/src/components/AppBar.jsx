@@ -5,7 +5,7 @@ import Container from '@mui/material/Container';
 import Toolbar from '@mui/material/Toolbar';
 import { useNavigate } from 'react-router-dom';
 
-const Header = () => {
+export const Header = () => {
     const nav = useNavigate();
 
     const handleLogoClick = () => {
@@ -30,5 +30,3 @@ const Header = () => {
         </Box>
     );
 }
-
-export default Header;

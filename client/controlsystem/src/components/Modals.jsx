@@ -26,7 +26,7 @@ const style = {
   textAlign: 'center',
 };
 
-const AddEntityModal = ({ entityType, projectId }) => {
+export const AddEntityModal = ({ entityType, projectId }) => {
   const [open, setOpen] = React.useState(false);
   const [files, setFiles] = React.useState([]);
   const [title, setTitle] = React.useState('');
@@ -146,5 +146,3 @@ const AddEntityModal = ({ entityType, projectId }) => {
     </div>
   );
 };
-
-export default AddEntityModal;

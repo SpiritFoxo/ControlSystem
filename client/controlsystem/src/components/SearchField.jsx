@@ -3,7 +3,7 @@ import TextField from "@mui/material/TextField";
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
-const SearchField = ({ value, onChange, placeholder }) => {
+export const SearchField = ({ value, onChange, placeholder }) => {
     return (
         <TextField 
         id="outlined-search" 
@@ -23,7 +23,5 @@ const SearchField = ({ value, onChange, placeholder }) => {
     );
 
 }
-
-export default SearchField;
 
 

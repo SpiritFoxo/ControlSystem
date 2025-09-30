@@ -1,7 +1,7 @@
 import Typography from "@mui/material/Typography";
 import styles from "../css/DefectCounter.module.css"
 
-const DefectCounter = () => {
+export const DefectCounter = () => {
     return (
         <div className={styles.parent}>
             <div>
@@ -23,5 +23,3 @@ const DefectCounter = () => {
         </div>
     );
 }
-
-export default DefectCounter
