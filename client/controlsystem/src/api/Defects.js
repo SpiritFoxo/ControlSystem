@@ -51,11 +51,21 @@ export const editDefect = async (defectId, title, description, priority, status)
     }
 }
 
-export const leaveComment = async (defectId, comment) =>{
+export const leaveComment = async (defectId, comment) => {
     try{
         const response = await api.axiosInstance.post(`/defects/${defectId}/comments`, {
             content: comment,
         });
+        return response.data;
+    }
+    catch (err){
+        
+    }
+}
+
+export const fetchComments = async (defectId, page = 1, limit = 10) => {
+    try{
+        const response = await api.axiosInstance.get(`/defects/${defectId}/comments?page=${page}&limit=${limit}`);
         return response.data;
     }
     catch (err){

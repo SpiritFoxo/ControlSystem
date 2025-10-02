@@ -12,12 +12,6 @@ type Project struct {
 	Reports     []Report
 }
 
-// type UserProject struct {
-// 	gorm.Model
-// 	UserID    uint `gorm:"not null"`
-// 	ProjectID uint `gorm:"not null"`
-// }
-
 type Report struct {
 	gorm.Model
 	ProjectID   uint `gorm:"not null"`

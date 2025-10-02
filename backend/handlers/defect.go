@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -205,7 +206,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 	})
 }
 
-func (s *Server) GetdefectById(c *gin.Context) {
+func (s *Server) GetDefectById(c *gin.Context) {
 	type UserResponse struct {
 		ID        uint   `json:"id"`
 		FirstName string `json:"firstName"`
@@ -225,7 +226,8 @@ func (s *Server) GetdefectById(c *gin.Context) {
 		CreatedBy   uint          `json:"createdBy"`
 		Creator     *UserResponse `json:"creator,omitempty"`
 		Deadline    *time.Time    `json:"deadline"`
-		PhotoUrl    string        `json:"photoUrl,omitempty"`
+		PhotosUrl   []string      `json:"photosUrl,omitempty"`
+		FilesUrl    []string      `json:"filesUrl,omitempty"`
 	}
 
 	defectId, exists := c.Params.Get("defectId")
@@ -250,26 +252,37 @@ func (s *Server) GetdefectById(c *gin.Context) {
 		return
 	}
 
-	var response []DefectResponse
+	var response DefectResponse
 	var creator = &UserResponse{
+		ID:        defect.Creator.ID,
 		FirstName: defect.Creator.FirstName,
 		LastName:  defect.Creator.LastName,
 		Email:     defect.Creator.Email,
 	}
 	var assignee = &UserResponse{
+		ID:        defect.Assignee.ID,
 		FirstName: defect.Assignee.FirstName,
 		LastName:  defect.Assignee.LastName,
 		Email:     defect.Assignee.Email,
 	}
-	var urlString string
-	var attachment models.Attachment
-	if err := s.db.Where("defect_id = ?", defectIDUint).First(&attachment).Error; err == nil {
-		if url, err := s.MinIo.GetFileURL(attachment.FilePath, attachment.FileName, 24*time.Hour); err == nil {
-			urlString = url
+	var photoString []string
+	var fileString []string
+	var attachments []models.Attachment
+	if err := s.db.Where("defect_id = ?", defectIDUint).Find(&attachments).Error; err == nil {
+		for _, attachment := range attachments {
+			url, err := s.MinIo.GetFileURL(attachment.FilePath, attachment.FileName, 24*time.Hour)
+			if err != nil {
+				continue
+			}
+			if attachment.FilePath == "images" {
+				photoString = append(photoString, url)
+			} else {
+				fileString = append(fileString, url)
+			}
 		}
 	}
 
-	response = append(response, DefectResponse{
+	response = DefectResponse{
 		ID:          defect.ID,
 		ProjectID:   defect.ProjectID,
 		Title:       defect.Title,
@@ -281,8 +294,9 @@ func (s *Server) GetdefectById(c *gin.Context) {
 		Assignee:    assignee,
 		Creator:     creator,
 		Deadline:    defect.Deadline,
-		PhotoUrl:    urlString,
-	})
+		PhotosUrl:   photoString,
+		FilesUrl:    fileString,
+	}
 
 	c.JSON(http.StatusOK, gin.H{"defect": response})
 }
@@ -359,7 +373,7 @@ func (s *Server) LeaveComment(c *gin.Context) {
 	}
 
 	roleId, exists := c.Get("role")
-	if !exists || (roleId.(uint) != 1 && roleId.(uint) != 2) {
+	if !exists {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: only engineers and managers can leave comments"})
 		return
 	}
@@ -409,4 +423,107 @@ func (s *Server) LeaveComment(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Comment added successfully", "comment": comment})
 
+}
+
+func (s *Server) GetComments(c *gin.Context) {
+	type CommentResponse struct {
+		ID         uint      `json:"id"`
+		Content    string    `json:"content"`
+		AuthorName string    `json:"authorName"`
+		CreatedAt  time.Time `json:"createdAt"`
+	}
+
+	defectId, exists := c.Params.Get("defectId")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "defectId is required"})
+		return
+	}
+
+	defectIDUint, err := strconv.ParseUint(defectId, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid defectId: " + err.Error()})
+		return
+	}
+
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	roleId, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: role not found"})
+		return
+	}
+
+	if roleId.(uint) < 2 {
+		var count int64
+		s.db.Table("defects").Where("id = ? AND (assigned_to = ? OR created_by = ?)", defectIDUint, userId, userId).Count(&count)
+		if count == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have access to view comments for this defect"})
+			return
+		}
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page number"})
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit value"})
+		return
+	}
+
+	offset := (page - 1) * limit
+
+	var total int64
+	if err := s.db.Model(&models.Comment{}).Where("defect_id = ?", defectIDUint).Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count comments"})
+		return
+	}
+
+	var comments []models.Comment
+	if err := s.db.Preload("Creator").
+		Where("defect_id = ?", defectIDUint).
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&comments).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve comments"})
+		return
+	}
+	commentResponses := make([]CommentResponse, len(comments))
+	for i, comment := range comments {
+		authorName := ""
+		if comment.Creator.ID != 0 {
+			authorName = strings.TrimSpace(comment.Creator.FirstName + " " + comment.Creator.LastName)
+		}
+		commentResponses[i] = CommentResponse{
+			ID:         comment.ID,
+			Content:    comment.Content,
+			AuthorName: authorName,
+			CreatedAt:  comment.CreatedAt,
+		}
+	}
+
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
+	c.JSON(http.StatusOK, gin.H{
+		"comments": commentResponses,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"totalPages":  totalPages,
+			"hasNextPage": page < int(totalPages),
+			"hasPrevPage": page > 1,
+		},
+	})
 }

@@ -113,7 +113,7 @@ const ProjectPage = () => {
                                 defectStatus={defectStatus}
                                 defectName={defectName}
                                 photoUrl={defect.photoUrl}
-                                onClick={handleDefectClick}
+                                onClick={() => handleDefectClick(defect.id)}
                             />
                         );
                     })}
