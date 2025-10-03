@@ -11,9 +11,11 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import {PaginationField} from '../components/PaginationField';
-import {DefectCard} from '../components/Cards'
+import {DefectCard, MobileDefectCard} from '../components/Cards'
 import { fetchAllDefects } from '../api/Defects';
 import {AddEntityModal} from "../components/Modals";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
 
 
 const ProjectPage = () => {
@@ -31,6 +33,8 @@ const ProjectPage = () => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [deadline, setDeadline] = useState('');
+    const [status, setStatus] = useState('');
 
     const loadDefects = async (page = 1) => {
         setLoading(true);
@@ -61,45 +65,49 @@ const ProjectPage = () => {
             <div className={bakground.contentParent}>
                 <Typography variant="h4">ЖК "Тест"</Typography>
                 <DefectCounter />
-                <div className={styles.searchfield}>
+                <Grid container spacing={2} alignItems={'center'} justifyContent={'center'}>
                     <SearchField />
-                    <FormControl sx={{ m: 1, minWidth: 100 }}>
-                        <InputLabel id="status-select-label">Статус</InputLabel>
-                        <Select
-                            labelId="status-select-label"
-                            id="status-select"
-                            autoWidth
-                            label="status"
-                        >
-                            <MenuItem value="">
-                                <em>None</em>
-                            </MenuItem>
-                            <MenuItem value={1}>В работе</MenuItem>
-                            <MenuItem value={2}>Завершен</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <FormControl sx={{ m: 1, minWidth: 80 }}>
-                        <InputLabel id="deadline-select-label">Срок</InputLabel>
-                        <Select
-                            labelId="deadline-select-label"
-                            id="deadline-select"
-                            autoWidth
-                            label="deadline"
-                        >
-                            <MenuItem value="">
-                                <em>None</em>
-                            </MenuItem>
-                            <MenuItem value={1}>Не просрочен</MenuItem>
-                            <MenuItem value={2}>Просрочен</MenuItem>
-                        </Select>
-                    </FormControl>
+                    <Box>
+                        <FormControl sx={{ m: 1, minWidth: 100 }}>
+                            <InputLabel id="status-select-label">Статус</InputLabel>
+                            <Select
+                                labelId="status-select-label"
+                                id="status-select"
+                                autoWidth
+                                value={status}
+                                label="status"
+                            >
+                                <MenuItem value="">
+                                    <em>None</em>
+                                </MenuItem>
+                                <MenuItem value={1}>В работе</MenuItem>
+                                <MenuItem value={2}>Завершен</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <FormControl sx={{ m: 1, minWidth: 80 }}>
+                            <InputLabel id="deadline-select-label">Срок</InputLabel>
+                            <Select
+                                labelId="deadline-select-label"
+                                id="deadline-select"
+                                autoWidth
+                                value={deadline}
+                                label="deadline"
+                            >
+                                <MenuItem value="">
+                                    <em>None</em>
+                                </MenuItem>
+                                <MenuItem value={1}>Не просрочен</MenuItem>
+                                <MenuItem value={2}>Просрочен</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>
                     <AddEntityModal entityType={'defect'} projectId={projectId}></AddEntityModal>
-                </div>
+                </Grid>
 
                 {loading && <p>Загрузка...</p>}
                 {error && <p className={styles.error}>{error}</p>}
 
-                <div className={styles.defectList}>
+                <Box sx={{display: 'flex', flexDirection: {xl: 'row', sm: 'column', xs: 'column'}, gap: '30px', alignItems: 'center'}}>
                     {defects.map((defect) => {
                         const authorName = `${defect.creator.firstName} ${defect.creator.lastName}`;
                         const defectStatus = defect.status || 1; 
@@ -117,7 +125,26 @@ const ProjectPage = () => {
                             />
                         );
                     })}
-                </div>
+
+                    {defects.map((defect) => {
+                        const authorName = `${defect.creator.firstName} ${defect.creator.lastName}`;
+                        const defectStatus = defect.status || 1; 
+                        const defectName = defect.title; 
+
+                        return (
+                            <MobileDefectCard
+                                key={defect.id}
+                                title={defectName}
+                                authorName={authorName}
+                                defectStatus={defectStatus}
+                                defectName={defectName}
+                                photoUrl={defect.photoUrl}
+                                onClick={() => handleDefectClick(defect.id)}
+                            />
+                        );
+                    })}
+                    
+                </Box>
 
                 <PaginationField
                     count={pagination.totalPages}

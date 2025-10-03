@@ -24,6 +24,7 @@ const style = {
   flexDirection: 'column',
   alignItems: 'center',
   textAlign: 'center',
+  sm: {width:'250px'},
 };
 
 export const AddEntityModal = ({ entityType, projectId }) => {
@@ -91,7 +92,7 @@ export const AddEntityModal = ({ entityType, projectId }) => {
 
   return (
     <div>
-      <Button onClick={handleOpen}>
+      <Button onClick={handleOpen} variant='contained'>
         {entityType === 'project' ? 'Создать проект' : 'Сообщить о дефекте'}
       </Button>
       <Modal

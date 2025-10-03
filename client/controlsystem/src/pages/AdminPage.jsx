@@ -14,6 +14,8 @@ import {SearchField} from "../components/SearchField";
 import {PaginationField} from "../components/PaginationField";
 import { registerNewUser } from "../api/Admin";
 import { getAllUsers } from "../api/Admin";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
 
 const AdminPage = () => {
     const [formData, setFormData] = useState({
@@ -100,75 +102,91 @@ const AdminPage = () => {
             <div className={background.contentParent}>
                 <div className={styles.userCreationParent}>
                     <Typography variant="h4" sx={{ mb: 5 }}>Зарегистрировать пользователя</Typography>
-                    <div className={styles.userCreationMenu}>
-                        <TextField
-                            required
-                            id="lastName"
-                            name="lastName"
-                            label="Обязательное поле"
-                            placeholder="Фамилия"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                        />
-                        <TextField
-                            required
-                            id="firstName"
-                            name="firstName"
-                            label="Обязательное поле"
-                            placeholder="Имя"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                        />
-                        <TextField
-                            id="middleName"
-                            name="middleName"
-                            label="Отчество"
-                            placeholder="Отчество"
-                            value={formData.middleName}
-                            onChange={handleInputChange}
-                        />
-                        <TextField
-                            required
-                            id="email"
-                            name="email"
-                            label="Обязательное поле"
-                            placeholder="Email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                        />
-                        <FormControl sx={{ m: 1, minWidth: 80 }}>
-                            <InputLabel id="role-select-label">Роль</InputLabel>
-                            <Select
-                                labelId="role-select-label"
-                                id="role"
-                                name="role"
-                                value={formData.role}
-                                onChange={handleRoleChange}
-                                autoWidth
-                                label="Роль"
-                            >
-                                <MenuItem value="">
-                                    <em>Выберите роль</em>
-                                </MenuItem>
-                                <MenuItem value={1}>Инженер</MenuItem>
-                                <MenuItem value={2}>Менеджер</MenuItem>
-                                <MenuItem value={3}>Руководитель</MenuItem>
-                                <MenuItem value={4}>Администратор</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <Button variant="contained" onClick={handleSubmit}>Зарегистрировать</Button>
-                    </div>
+                    <Box>
+                        <Grid container spacing={2} justifyItems={'center'} marginBottom={6}>
+                            <Box>
+                                <TextField
+                                    required
+                                    id="lastName"
+                                    name="lastName"
+                                    label="Обязательное поле"
+                                    placeholder="Фамилия"
+                                    value={formData.lastName}
+                                    onChange={handleInputChange}
+                                />
+                            </Box>
+                            <Box>
+                                <TextField
+                                    required
+                                    id="firstName"
+                                    name="firstName"
+                                    label="Обязательное поле"
+                                    placeholder="Имя"
+                                    value={formData.firstName}
+                                    onChange={handleInputChange}
+                                />
+                            </Box>
+                            <Box>
+                                <TextField
+                                    id="middleName"
+                                    name="middleName"
+                                    label="Отчество"
+                                    placeholder="Отчество"
+                                    value={formData.middleName}
+                                    onChange={handleInputChange}
+                                />
+                            </Box>
+                            <Box>
+                                <TextField
+                                    required
+                                    id="email"
+                                    name="email"
+                                    label="Обязательное поле"
+                                    placeholder="Email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                />
+                            </Box>
+                            <Grid container spacing={2}>
+                                <FormControl sx={{ minWidth: 80 }}>
+                                    <InputLabel id="role-select-label">Роль</InputLabel>
+                                    <Select
+                                        labelId="role-select-label"
+                                        id="role"
+                                        name="role"
+                                        value={formData.role}
+                                        onChange={handleRoleChange}
+                                        autoWidth
+                                        label="Роль"
+                                    >
+                                        <MenuItem value="">
+                                            <em>Выберите роль</em>
+                                        </MenuItem>
+                                        <MenuItem value={1}>Инженер</MenuItem>
+                                        <MenuItem value={2}>Менеджер</MenuItem>
+                                        <MenuItem value={3}>Руководитель</MenuItem>
+                                        <MenuItem value={4}>Администратор</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                <Button variant="contained" onClick={handleSubmit}>Зарегистрировать</Button>
+                            </Grid>
+                        </Grid>
+                    </Box>
                     {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
                     {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
-                    <div className={styles.userControlMenu}>
+                    <Box sx={{display: 'flex', flexDirection: 'column', gap: '30px'}}>
                         <Typography variant="h4">Управление</Typography>
-                        <SearchField onSearch={handleSearch} />
-                        <PaginationField
-                            onPageChange={handlePageChange}
-                            totalPages={pagination.totalPages}
-                            currentPage={page}
-                        />
-                    </div>
+                        <Grid container>
+                            <Box sx={{ display: 'flex', flexDirection: {xl: 'row', sm: 'column', xs: 'column'}, alignItems: 'center', gap: '30px'}}>
+                                <SearchField onSearch={handleSearch} />
+                                <PaginationField
+                                    onPageChange={handlePageChange}
+                                    totalPages={pagination.totalPages}
+                                    currentPage={page}
+                                />
+                            </Box>
+                        </Grid>
+                    </Box>
                 </div>
                 <AdminTable
                     tableWidth={"74vw"}

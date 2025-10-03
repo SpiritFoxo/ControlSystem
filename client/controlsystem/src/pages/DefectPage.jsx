@@ -56,7 +56,7 @@ const DefectPage = () => {
     const handleCommentSubmit = async (comment) => {
         try {
         const newComment = await leaveComment(defectId, comment);
-        setComments((prevComments) => [newComment.comment, ...prevComments]);
+        setComments((prevComments) => [newComment, ...prevComments]);
         setPagination((prev) => ({
             ...prev,
             total: prev.total + 1,

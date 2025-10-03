@@ -44,7 +44,7 @@ export const AdminTable = ({ tableWidth, page, searchQuery, onUserUpdate }) => {
 
     return (
         <TableContainer sx={{ width: tableWidth }}>
-            <Table>
+            <Table stickyHeader>
                 <TableHead>
                     <TableRow>
                         <TableCell>ФИО</TableCell>

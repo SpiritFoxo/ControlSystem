@@ -421,7 +421,7 @@ func (s *Server) LeaveComment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Comment added successfully", "comment": comment})
+	c.JSON(http.StatusCreated, gin.H{"message": "Comment added successfully", "id": comment.ID, "content": comment.Content, "authorName": user.FirstName})
 
 }
 

@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
@@ -63,7 +64,7 @@ export const MobileProjectCard = ({ title, photoUrl, onClick }) => {
 
 export const DefectCard = ({ title, authorName, defectStatus, defectName, photoUrl, onClick }) => {
     return (
-        <Card sx={{ minWidth: 320, maxWidth: 340, minHeight: 360, maxHeight: 360 }} onClick={onClick}>
+        <Card sx={{ minWidth: 320, maxWidth: 340, minHeight: 360, maxHeight: 360, display: {xl: 'block', lg: 'block', sm: 'none', xs: 'none'} }} onClick={onClick}>
             <CardContent sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
                 <Typography>{authorName}</Typography>
                 <div
@@ -91,4 +92,33 @@ export const DefectCard = ({ title, authorName, defectStatus, defectName, photoU
             </CardActions>
         </Card>
     );
-};
+}
+
+export const MobileDefectCard = ({ title, defectStatus, defectName, photoUrl, onClick }) => {
+    return (
+        <Card sx={{ maxHeight: 200, width: '90vw',display: {xl: 'none', lg: 'none', sm: 'flex', xs: 'flex'}, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }} onClick={onClick}>
+            <CardContent>
+                <div
+                    style={{
+                        background: defectStatus === 1 ? "yellow" : "red",
+                        borderRadius: "999px",
+                        width: 40,
+                        height: 40,
+                    }}
+                />
+            </CardContent>
+            <CardContent>
+                <Box>
+                    <Typography gutterBottom variant="h5" component="div">
+                        {title || defectName}
+                    </Typography>
+                </Box>
+            </CardContent>
+            <CardMedia
+                sx={{ width: 100, height: 100 }}
+                image={photoUrl || "/images/placeholder-project-desktop.jpg"}
+                title={defectName}
+            />
+        </Card>
+    );
+}

@@ -8,6 +8,8 @@ import {PaginationField} from "../components/PaginationField";
 import {ProjectCard, MobileProjectCard} from "../components/Cards";
 import { fetchAllProjects } from "../api/Projects";
 import {AddEntityModal} from "../components/Modals";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 
 const ProjectsPage = () => {
     const nav = useNavigate();
@@ -43,10 +45,14 @@ const ProjectsPage = () => {
         <div className={bakground.background}>
             <Header />
             <div className={bakground.contentParent}>
-                <div>
-                <SearchField />
-                <AddEntityModal entityType={'project'}></AddEntityModal>
-                </div>
+                <Grid container spacing={2} alignItems={'center'} justifyContent={'center'}>
+                    <Grid>
+                        <SearchField />
+                    </Grid>
+                    <Grid>
+                        <AddEntityModal entityType={'project'}></AddEntityModal>
+                    </Grid>
+                </Grid>
 
                 {loading && <p>Загрузка...</p>}
                 {error && <p className={styles.error}>{error}</p>}
