@@ -12,4 +12,5 @@ func RegisterProjectsRoutes(r *gin.RouterGroup, s *handlers.Server) {
 	r.POST("/", s.CreateProject)
 	r.PATCH("/:projectId", s.EditProjectInfo)
 	r.GET("/", s.GetProjects)
+	r.GET("/:projectId", s.GetProject)
 }

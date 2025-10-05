@@ -102,7 +102,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 	}
 
 	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "4")
+	limitStr := c.DefaultQuery("limit", "8")
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {

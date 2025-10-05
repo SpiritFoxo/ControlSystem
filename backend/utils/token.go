@@ -41,7 +41,7 @@ func GenerateRefreshToken(user models.User) (string, error) {
 
 	claims := jwt.MapClaims{}
 	claims["id"] = user.ID
-	// claims["jti"] = uuid.New().String()
+	claims["role"] = user.Role
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(tokenLifespan)).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("REFRESH_TOKEN_SECRET")))

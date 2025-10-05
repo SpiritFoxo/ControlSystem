@@ -8,7 +8,6 @@ import {PaginationField} from "../components/PaginationField";
 import {ProjectCard, MobileProjectCard} from "../components/Cards";
 import { fetchAllProjects } from "../api/Projects";
 import {AddEntityModal} from "../components/Modals";
-import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 
 const ProjectsPage = () => {
@@ -27,8 +26,8 @@ const ProjectsPage = () => {
         setError(null);
         try {
             const response = await fetchAllProjects(page);
-            setProjects(response.data.projects || []);
-            setPagination(response.data.pagination || { page: 1, totalPages: 1 });
+            setProjects(response.projects || []);
+            setPagination(response.pagination || { page: 1, totalPages: 1 });
         } catch (err) {
             console.error("Ошибка загрузки проектов:", err);
             setError("Не удалось загрузить проекты");
@@ -57,7 +56,7 @@ const ProjectsPage = () => {
                 {loading && <p>Загрузка...</p>}
                 {error && <p className={styles.error}>{error}</p>}
 
-                <div className={styles.projectList}>
+                <Grid spacing={3} container justifyContent={'center'}>
                     {projects.map((project) => (
                         <ProjectCard
                             key={project.id}
@@ -75,7 +74,7 @@ const ProjectsPage = () => {
                             onClick={() => handleProjectClick(project.id)}
                         />
                     ))}
-                </div>
+                </Grid>
 
                 <PaginationField
                     count={pagination.totalPages}

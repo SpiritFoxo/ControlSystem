@@ -16,6 +16,7 @@ import { fetchAllDefects } from '../api/Defects';
 import {AddEntityModal} from "../components/Modals";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
+import { fetchProjectById } from "../api/Projects";
 
 
 const ProjectPage = () => {
@@ -25,6 +26,8 @@ const ProjectPage = () => {
         nav(`/defect/${defectId}`);
     }
     const { projectId } = useParams();
+    const [projectName, setProjectName] = useState('');
+    const [projectDescription, setProjectDescription] = useState('');
     const [defects, setDefects] = useState([]);
     const [pagination, setPagination] = useState({
         page: 1,
@@ -36,16 +39,27 @@ const ProjectPage = () => {
     const [deadline, setDeadline] = useState('');
     const [status, setStatus] = useState('');
 
+    const loadProject = async () => {
+        try {
+            const response = await fetchProjectById(projectId);
+            setProjectName(response.project_name || "Без названия");
+            setProjectDescription(response.project_description || "Нет описания");
+        } catch (err) {
+            console.error("Ошибка загрузки проекта:", err);
+            setError("Не удалось загрузить проект");
+        }
+    };
+
     const loadDefects = async (page = 1) => {
         setLoading(true);
         setError(null);
         try {
             const response = await fetchAllDefects(projectId, { page });
-            setDefects(response.data.defects || []);
+            setDefects(response.defects || []);
             setPagination({
-                page: response.data.pagination.page,
-                totalPages: response.data.pagination.totalPages,
-                limit: response.data.pagination.limit,
+                page: response.pagination.page,
+                totalPages: response.pagination.totalPages,
+                limit: response.pagination.limit,
             });
         } catch (err) {
             console.error("Ошибка загрузки дефектов:", err);
@@ -56,6 +70,7 @@ const ProjectPage = () => {
     };
 
     useEffect(() => {
+        loadProject();
         loadDefects(1);
     }, [projectId]);
 
@@ -63,7 +78,8 @@ const ProjectPage = () => {
         <div className={bakground.background}>
             <Header />
             <div className={bakground.contentParent}>
-                <Typography variant="h4">ЖК "Тест"</Typography>
+                <Typography variant="h4">{projectName}</Typography>
+                <Typography variant="body1">{projectDescription}</Typography>
                 <DefectCounter />
                 <Grid container spacing={2} alignItems={'center'} justifyContent={'center'}>
                     <SearchField />
@@ -107,7 +123,7 @@ const ProjectPage = () => {
                 {loading && <p>Загрузка...</p>}
                 {error && <p className={styles.error}>{error}</p>}
 
-                <Box sx={{display: 'flex', flexDirection: {xl: 'row', sm: 'column', xs: 'column'}, gap: '30px', alignItems: 'center'}}>
+                <Grid container spacing={3} justifyContent={'center'}>
                     {defects.map((defect) => {
                         const authorName = `${defect.creator.firstName} ${defect.creator.lastName}`;
                         const defectStatus = defect.status || 1; 
@@ -144,7 +160,7 @@ const ProjectPage = () => {
                         );
                     })}
                     
-                </Box>
+                </Grid>
 
                 <PaginationField
                     count={pagination.totalPages}

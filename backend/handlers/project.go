@@ -304,3 +304,33 @@ func (s *Server) GetProjects(c *gin.Context) {
 		},
 	})
 }
+
+func (s *Server) GetProject(c *gin.Context) {
+	projectIdStr := c.Param("projectId")
+	if projectIdStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "projectId is required"})
+		return
+	}
+
+	projectID, err := strconv.ParseUint(projectIdStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid projectId: " + err.Error()})
+		return
+	}
+
+	var project models.Project
+	if err := s.db.First(&project, uint(projectID)).Error; err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve project"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"project_name":        project.Name,
+		"project_description": project.Description,
+	})
+}
