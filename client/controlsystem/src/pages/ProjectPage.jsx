@@ -17,15 +17,15 @@ import {AddEntityModal} from "../components/Modals";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import { fetchProjectById } from "../api/Projects";
+import { RequireRole } from "../components/RequiredRole";
+import { ROLES } from "../constants/Roles";
+import Button from "@mui/material/Button";
 
 
 const ProjectPage = () => {
     const nav = useNavigate();
-
-    const handleDefectClick = (defectId) => {
-        nav(`/defect/${defectId}`);
-    }
     const { projectId } = useParams();
+
     const [projectName, setProjectName] = useState('');
     const [projectDescription, setProjectDescription] = useState('');
     const [defects, setDefects] = useState([]);
@@ -38,6 +38,7 @@ const ProjectPage = () => {
     const [error, setError] = useState(null);
     const [deadline, setDeadline] = useState('');
     const [status, setStatus] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const loadProject = async () => {
         try {
@@ -50,11 +51,11 @@ const ProjectPage = () => {
         }
     };
 
-    const loadDefects = async (page = 1) => {
+    const loadDefects = async (page = 1, search = searchQuery) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetchAllDefects(projectId, { page });
+            const response = await fetchAllDefects(projectId, { page }, search);
             setDefects(response.defects || []);
             setPagination({
                 page: response.pagination.page,
@@ -74,6 +75,15 @@ const ProjectPage = () => {
         loadDefects(1);
     }, [projectId]);
 
+    const handleDefectClick = (defectId) => {
+        nav(`/defect/${defectId}`);
+    }
+
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        loadDefects(1, query);
+    }
+
     return (
         <div className={bakground.background}>
             <Header />
@@ -82,7 +92,7 @@ const ProjectPage = () => {
                 <Typography variant="body1">{projectDescription}</Typography>
                 <DefectCounter />
                 <Grid container spacing={2} alignItems={'center'} justifyContent={'center'}>
-                    <SearchField />
+                    <SearchField onSearchClick={() => loadDefects(1, searchQuery)} value={searchQuery} onChange={setSearchQuery} />
                     <Box>
                         <FormControl sx={{ m: 1, minWidth: 100 }}>
                             <InputLabel id="status-select-label">Статус</InputLabel>
@@ -117,7 +127,8 @@ const ProjectPage = () => {
                             </Select>
                         </FormControl>
                     </Box>
-                    <AddEntityModal entityType={'defect'} projectId={projectId}></AddEntityModal>
+                    <RequireRole allowedRoles={[ROLES.ENGINEER]}><AddEntityModal entityType={'defect'} projectId={projectId}></AddEntityModal></RequireRole>
+                    <RequireRole allowedRoles={[ROLES.MANAGER]}><Button>Экспортировать отчет</Button></RequireRole>
                 </Grid>
 
                 {loading && <p>Загрузка...</p>}

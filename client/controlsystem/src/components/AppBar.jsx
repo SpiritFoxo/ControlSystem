@@ -4,6 +4,7 @@ import Button from "@mui/material/Button";
 import Container from '@mui/material/Container';
 import Toolbar from '@mui/material/Toolbar';
 import { useNavigate } from 'react-router-dom';
+import { RequireRole } from './RequiredRole';
 
 export const Header = () => {
     const nav = useNavigate();
@@ -21,7 +22,7 @@ export const Header = () => {
                         <Box onClick={handleLogoClick} component="img" src="/images/logotype-mobile.png" alt="Logo" sx={{ display: {xs: 'block', md: 'none'}}}></Box>
                         
                         <Box sx={{ ml: 'auto', gap: {xs: 1, md: 2}, display: 'flex' }}>
-                            <Button variant="contained" href="/admin">Админ-панель</Button>
+                            <RequireRole allowedRoles={[]}><Button variant="contained" href="/admin">Админ-панель</Button></RequireRole>
                             <Button variant="contained" href="/logout">Выйти</Button>
                         </Box>
                     </Toolbar>

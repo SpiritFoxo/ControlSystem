@@ -27,7 +27,7 @@ func (s *Server) CreateProject(c *gin.Context) {
 		return
 	}
 
-	if roleId.(uint) < 3 {
+	if roleId.(uint) != 2 && roleId.(uint) != 4 && roleId.(uint) != 5 {
 		c.JSON(403, gin.H{"error": "forbidden"})
 		return
 	}
@@ -198,7 +198,6 @@ func (s *Server) AssignEngineer(c *gin.Context) {
 }
 
 func (s *Server) GetProjects(c *gin.Context) {
-
 	type ProjectResponse struct {
 		ID       uint   `json:"id"`
 		Name     string `json:"name"`
@@ -219,7 +218,7 @@ func (s *Server) GetProjects(c *gin.Context) {
 
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "10")
-
+	search := c.DefaultQuery("search", "")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page number"})
@@ -231,41 +230,48 @@ func (s *Server) GetProjects(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit value"})
 		return
 	}
+
+	offset := (page - 1) * limit
 	var projects []ProjectResponse
 	var total int64
 
-	offset := (page - 1) * limit
+	likeSearch := "%" + search + "%"
 
 	switch roleId.(uint) {
 	case 1:
-		if err := s.db.Model(&models.Project{}).
+		query := s.db.Model(&models.Project{}).
 			Joins("JOIN user_project ON user_project.project_id = projects.id").
-			Where("user_project.user_id = ?", userId.(uint)).
-			Count(&total).Error; err != nil {
+			Where("user_project.user_id = ?", userId.(uint))
+
+		if search != "" {
+			query = query.Where("projects.name LIKE ?", likeSearch)
+		}
+
+		if err := query.Count(&total).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := s.db.Model(&models.Project{}).
-			Select("projects.id, projects.name").
-			Joins("JOIN user_project ON user_project.project_id = projects.id").
-			Where("user_project.user_id = ?", userId.(uint)).
-			Offset(offset).
-			Limit(limit).
+		if err := query.Select("projects.id, projects.name").
+			Offset(offset).Limit(limit).
 			Scan(&projects).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
 	default:
-		if err := s.db.Model(&models.Project{}).Count(&total).Error; err != nil {
+		query := s.db.Model(&models.Project{})
+		if search != "" {
+			query = query.Where("name LIKE ?", likeSearch)
+		}
+
+		if err := query.Count(&total).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := s.db.Model(&models.Project{}).
-			Select("id, name").
-			Offset(offset).
-			Limit(limit).
+		if err := query.Select("id, name").
+			Offset(offset).Limit(limit).
 			Scan(&projects).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

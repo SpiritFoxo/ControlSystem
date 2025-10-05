@@ -209,21 +209,43 @@ func (s *Server) GetUsers(c *gin.Context) {
 		return
 	}
 
-	var users []models.User
-	var total int64
 	offset := (page - 1) * limit
 
-	if err := s.db.Model(&models.User{}).Count(&total).Error; err != nil {
+	emailFilter := c.Query("email")
+	roleFilter := c.Query("role")
+	statusFilter := c.Query("is_enabled")
+
+	query := s.db.Model(&models.User{}).Where("id <> ?", userId.(uint))
+
+	if emailFilter != "" {
+		query = query.Where("LOWER(email) LIKE ?", "%"+strings.ToLower(emailFilter)+"%")
+	}
+
+	if roleFilter != "" {
+		if roleValue, err := strconv.Atoi(roleFilter); err == nil {
+			query = query.Where("role = ?", roleValue)
+		}
+	}
+
+	if statusFilter != "" {
+		if status, err := strconv.ParseBool(statusFilter); err == nil {
+			query = query.Where("is_enabled = ?", status)
+		}
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to count users"})
 		return
 	}
 
-	if err := s.db.Where("not id = ?", userId.(uint)).Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+	var users []models.User
+	if err := query.Offset(offset).Limit(limit).Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch users"})
 		return
 	}
 
-	var response []UserResponse
+	response := make([]UserResponse, 0, len(users))
 	for _, u := range users {
 		response = append(response, UserResponse{
 			ID:        u.ID,

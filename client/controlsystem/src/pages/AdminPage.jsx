@@ -25,16 +25,20 @@ const AdminPage = () => {
         email: '',
         role: ''
     });
+
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
-    const [userUpdateTrigger, setUserUpdateTrigger] = useState(0);
     const [pagination, setPagination] = useState({ limit: 10, page: 1, total: 0, totalPages: 1 });
-
+    const [userUpdateTrigger, setUserUpdateTrigger] = useState(0);
+    
     useEffect(() => {
         const fetchPagination = async () => {
-            const { pagination } = await getAllUsers({ page, search: searchQuery });
+            const { pagination } = await getAllUsers({
+                page,
+                email: searchQuery
+            });
             setPagination(pagination);
         };
         fetchPagination();
@@ -87,9 +91,13 @@ const AdminPage = () => {
         }
     };
 
-    const handleSearch = (query) => {
-        setSearchQuery(query);
-        setPage(1); 
+    const handleSearchChange = (value) => {
+        setSearchQuery(value);
+    };
+
+    const handleSearchClick = () => {
+        setPage(1);
+        setUserUpdateTrigger((prev) => prev + 1);
     };
 
     const handlePageChange = (newPage) => {
@@ -174,11 +182,15 @@ const AdminPage = () => {
                     </Box>
                     {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
                     {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
-                    <Box sx={{display: 'flex', flexDirection: 'column', gap: '30px'}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                         <Typography variant="h4">Управление</Typography>
                         <Grid container>
-                            <Box sx={{ display: 'flex', flexDirection: {xl: 'row', sm: 'column', xs: 'column'}, alignItems: 'center', gap: '30px'}}>
-                                <SearchField onSearch={handleSearch} />
+                            <Box sx={{ display: 'flex', flexDirection: { xl: 'row', sm: 'column', xs: 'column' }, alignItems: 'center', gap: '30px' }}>
+                                <SearchField
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                    onSearchClick={handleSearchClick}
+                                />
                                 <PaginationField
                                     onPageChange={handlePageChange}
                                     totalPages={pagination.totalPages}

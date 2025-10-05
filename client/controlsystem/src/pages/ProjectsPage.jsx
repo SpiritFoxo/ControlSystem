@@ -9,6 +9,8 @@ import {ProjectCard, MobileProjectCard} from "../components/Cards";
 import { fetchAllProjects } from "../api/Projects";
 import {AddEntityModal} from "../components/Modals";
 import Grid from "@mui/material/Grid";
+import { RequireRole } from "../components/RequiredRole";
+import { ROLES } from "../constants/Roles";
 
 const ProjectsPage = () => {
     const nav = useNavigate();
@@ -20,12 +22,13 @@ const ProjectsPage = () => {
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const loadProjects = async (page = 1) => {
+    const loadProjects = async (page = 1, search = searchQuery) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetchAllProjects(page);
+            const response = await fetchAllProjects(page, search);
             setProjects(response.projects || []);
             setPagination(response.pagination || { page: 1, totalPages: 1 });
         } catch (err) {
@@ -40,16 +43,25 @@ const ProjectsPage = () => {
         loadProjects(1);
     }, []);
 
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        loadProjects(1, query);
+    };
+
     return (
         <div className={bakground.background}>
             <Header />
             <div className={bakground.contentParent}>
                 <Grid container spacing={2} alignItems={'center'} justifyContent={'center'}>
                     <Grid>
-                        <SearchField />
+                        <SearchField 
+                            value={searchQuery} 
+                            onChange={setSearchQuery} 
+                            onSearchClick={() => loadProjects(1, searchQuery)} 
+                        />
                     </Grid>
                     <Grid>
-                        <AddEntityModal entityType={'project'}></AddEntityModal>
+                        <RequireRole allowedRoles={[ROLES.MANAGER]}><AddEntityModal entityType={'project'}></AddEntityModal></RequireRole>
                     </Grid>
                 </Grid>
 

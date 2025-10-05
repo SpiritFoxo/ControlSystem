@@ -103,6 +103,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "8")
+	search := c.DefaultQuery("search", "")
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
@@ -122,23 +123,25 @@ func (s *Server) GetDefects(c *gin.Context) {
 		return
 	}
 
+	offset := (page - 1) * limit
 	var defects []models.Defect
 	var total int64
 
-	offset := (page - 1) * limit
+	likeSearch := "%" + search + "%"
 
-	if err := s.db.Model(&models.Defect{}).
-		Where("project_id = ?", input.ProjectID).
-		Count(&total).Error; err != nil {
+	query := s.db.Preload("Creator").Model(&models.Defect{}).
+		Where("project_id = ?", input.ProjectID)
+
+	if search != "" {
+		query = query.Where("title LIKE ?", likeSearch)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := s.db.Preload("Creator").Model(&models.Defect{}).
-		Where("project_id = ?", input.ProjectID).
-		Offset(offset).
-		Limit(limit).
-		Find(&defects).Error; err != nil {
+	if err := query.Offset(offset).Limit(limit).Find(&defects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -184,8 +187,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 		}
 
 		if atts, ok := attachmentsMap[d.ID]; ok && len(atts) > 0 {
-			url, err := s.MinIo.GetFileURL(atts[0].FilePath, atts[0].FileName, 24*time.Hour)
-			if err == nil {
+			if url, err := s.MinIo.GetFileURL(atts[0].FilePath, atts[0].FileName, 24*time.Hour); err == nil {
 				defResp.PhotoUrl = url
 			}
 		}
@@ -445,26 +447,26 @@ func (s *Server) GetComments(c *gin.Context) {
 		return
 	}
 
-	userId, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
+	// userId, exists := c.Get("user_id")
+	// if !exists {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+	// 	return
+	// }
 
-	roleId, exists := c.Get("role")
-	if !exists {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: role not found"})
-		return
-	}
+	// roleId, exists := c.Get("role")
+	// if !exists {
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: role not found"})
+	// 	return
+	// }
 
-	if roleId.(uint) < 2 {
-		var count int64
-		s.db.Table("defects").Where("id = ? AND (assigned_to = ? OR created_by = ?)", defectIDUint, userId, userId).Count(&count)
-		if count == 0 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have access to view comments for this defect"})
-			return
-		}
-	}
+	// if roleId.(uint) < 2 {
+	// 	var count int64
+	// 	s.db.Table("defects").Where("id = ? AND (assigned_to = ? OR created_by = ?)", defectIDUint, userId, userId).Count(&count)
+	// 	if count == 0 {
+	// 		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have access to view comments for this defect"})
+	// 		return
+	// 	}
+	// }
 
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "10")

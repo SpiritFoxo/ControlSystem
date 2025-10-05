@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import api from '../api/axiosInstance';
 
 const AuthContext = createContext(null);
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         console.log("AuthContext: Attempting to refresh token...");
         try {
             const response = await api.authAxiosInstance.post('auth/refresh');
-            const { token: newAccessToken, user_id: newUserId, role_id: newRoleId } = response.data;
+            const { token: newAccessToken, user_id: newUserId, role: newRoleId } = response.data;
             console.log("AuthContext: Token refreshed successfully.");
             setAuthState(newAccessToken, newUserId || userId, newRoleId || roleId);
             return newAccessToken;
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
             clearAuthState();
             throw error;
         }
-    }, [setAuthState, clearAuthState, userId]);
+    }, [setAuthState, clearAuthState, userId, roleId]);
 
     useEffect(() => {
         const handleTokenRefreshed = (event) => {

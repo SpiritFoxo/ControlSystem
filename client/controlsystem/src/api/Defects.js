@@ -1,8 +1,8 @@
 import api from './axiosInstance'
 
-export const fetchAllDefects = async (projectId, { page = 1} = {}) => {
+export const fetchAllDefects = async (projectId, { page = 1} = {}, search = '') => {
     try{
-        const response = await api.axiosInstance.get(`/defects/?projectId=${projectId}&page=${page}`);
+        const response = await api.axiosInstance.get(`/defects/?projectId=${projectId}&page=${page}&search=${search}`);
         return response.data;
     }
     catch (err){

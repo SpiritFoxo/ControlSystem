@@ -1,15 +1,15 @@
 import api from './axiosInstance'
 
-export const fetchAllProjects = async () => {
-    try{
-        const response = await api.axiosInstance.get('/projects/');
+export const fetchAllProjects = async (page = 1, search = '') => {
+    try {
+        const limit = 10;
+        const response = await api.axiosInstance.get(`/projects/?page=${page}&limit=${limit}&search=${search}`);
         return response.data;
-    }
-    catch (err){
+    } catch (err) {
         console.error("API Error fetchAllProjects:", err.response || err.message || err);
         throw new Error(err.response?.data?.error || err.message || "Failed to fetch projects information");
     }
-}
+};
 
 export const fetchProjectById = async (projectId) => {
     try {

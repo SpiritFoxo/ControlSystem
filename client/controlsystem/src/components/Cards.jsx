@@ -88,7 +88,6 @@ export const DefectCard = ({ title, authorName, defectStatus, defectName, photoU
             </CardContent>
             <CardActions>
                 <Button size="small">Редактировать</Button>
-                <Button size="small">Удалить</Button>
             </CardActions>
         </Card>
     );

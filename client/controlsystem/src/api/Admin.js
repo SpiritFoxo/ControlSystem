@@ -34,9 +34,17 @@ export const editUser = async (userId, firstName, middleName, lastName, role, is
 }
 
 
-export const getAllUsers = async ({ page = 1, search = '' } = {}) => {
+export const getAllUsers = async ({ page = 1, email = '', role = '', isEnabled = '' } = {}) => {
     try {
-        const response = await api.axiosInstance.get(`/admin/get-users?page=${page}&search=${search}`);
+        const params = new URLSearchParams();
+
+        params.append('page', page);
+        if (email) params.append('email', email);
+        if (role) params.append('role', role);
+        if (isEnabled !== '') params.append('is_enabled', isEnabled);
+
+        const response = await api.axiosInstance.get(`/admin/get-users?${params.toString()}`);
+
         return {
             users: Array.isArray(response.data.users) ? response.data.users : [],
             pagination: response.data.pagination || { limit: 10, page: 1, total: 0, totalPages: 1 }
