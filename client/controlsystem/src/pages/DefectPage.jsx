@@ -5,13 +5,16 @@ import {Header} from '../components/AppBar';
 import background from "../css/Background.module.css";
 import { ReportsTable } from '../components/ReportsTable';
 import { PreviewTable } from '../components/PrevievTable';
-import { Box, CircularProgress, Alert } from '@mui/material';
+import { Box, CircularProgress, Alert, Button } from '@mui/material';
 import { fetchDefectById, leaveComment, fetchComments } from '../api/Defects';
+import { EditEntityModal } from '../components/Modals';
+import { uploadAttachment } from '../api/Attachments';
 
 const DefectPage = () => {
     const { defectId } = useParams();
     const [defect, setDefect] = useState(null);
     const [comments, setComments] = useState([]);
+    const [files, setFiles] = useState([]);
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 10,
@@ -72,6 +75,33 @@ const DefectPage = () => {
         loadDefectAndComments(newPage, pagination.limit);
     };
 
+    const handleFileChange = (event) => {
+        setFiles(Array.from(event.target.files));
+    };
+
+    const handleUploadFiles = async () => {
+        if (files.length === 0) {
+            alert('Пожалуйста, выберите хотя бы один файл.');
+            return;
+        }
+
+        try {
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('defectId', defectId);
+                await uploadAttachment(formData);
+            }
+            setFiles([]);
+            setError(null);
+            const defectResponse = await fetchDefectById(defectId);
+            setDefect(defectResponse.defect);
+            alert('Вложения успешно загружены!');
+        } catch (err) {
+            setError('Ошибка при загрузке вложений: ' + err.message);
+        }
+    };
+
 
     if (loading) {
         return (
@@ -116,8 +146,22 @@ const DefectPage = () => {
                 }}>
                     <Typography variant='h3'>{defect.title}</Typography>
                     <Typography variant='body1'>{defect.description}</Typography>
+                    <EditEntityModal entityType={"defect"} entityId={defectId} title={defect.title} description={defect.description} status={defect.status} priority={defect.priority}></EditEntityModal>
                     <Typography variant='h4'>Медиафайлы</Typography>
                     <PreviewTable images={defect.photosUrl || []} files={defect.filesUrl || []} />
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle1" sx={{ mb: 1 }}>Загрузка новых вложений</Typography>
+                        <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            onChange={handleFileChange}
+                            style={{ marginBottom: '8px' }}
+                            multiple
+                        />
+                        <Button variant="contained" onClick={handleUploadFiles}>
+                            Загрузить файлы
+                        </Button>
+                    </Box>
                     <Typography variant='h4'>Комментарии</Typography>
                     <ReportsTable
                         onCommentSubmit={handleCommentSubmit}

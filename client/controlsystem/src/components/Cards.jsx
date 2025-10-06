@@ -86,9 +86,6 @@ export const DefectCard = ({ title, authorName, defectStatus, defectName, photoU
                     {title || defectName}
                 </Typography>
             </CardContent>
-            <CardActions>
-                <Button size="small">Редактировать</Button>
-            </CardActions>
         </Card>
     );
 }

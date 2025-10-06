@@ -358,7 +358,7 @@ func (s *Server) UpdateDefect(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, defect.ID)
+	c.JSON(http.StatusOK, defect)
 
 }
 

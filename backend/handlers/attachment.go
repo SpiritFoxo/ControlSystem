@@ -44,15 +44,15 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 	}
 
 	if projectID == 0 {
-		if roleId.(uint) >= 2 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only engineers and managers can attach files"})
+		if roleId.(uint) != 2 && roleId.(uint) <= 4 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only engineers can attach files"})
 			return
 		}
 	}
 
 	if defectID == 0 {
-		if roleId.(uint) < 3 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only observers and admins can attach files"})
+		if roleId.(uint) != 3 && roleId.(uint) <= 4 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only managers can attach files"})
 			return
 		}
 	}

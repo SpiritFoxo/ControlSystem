@@ -54,9 +54,9 @@ func (s *Server) CreateProject(c *gin.Context) {
 func (s *Server) EditProjectInfo(c *gin.Context) {
 
 	type EditProjectInfoInput struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Status      uint   `json:"status"`
+		Name        string `json:"name" binding:"omitempty"`
+		Description string `json:"description" binding:"omitempty"`
+		Status      uint   `json:"status" binding:"omitempty"`
 	}
 
 	roleId, exists := c.Get("role")
@@ -65,7 +65,7 @@ func (s *Server) EditProjectInfo(c *gin.Context) {
 		return
 	}
 
-	if roleId.(uint) < 2 || roleId.(uint) >= 4 {
+	if roleId.(uint) < 2 {
 		c.JSON(403, gin.H{"error": "forbidden"})
 		return
 	}

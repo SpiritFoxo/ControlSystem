@@ -17,7 +17,8 @@ export const fetchProjectById = async (projectId) => {
         return response.data;
     }
     catch (err){
-
+        console.error(err.response || err.message || err)
+        throw new Error(err.response?.data?.error || err.message)
     }
 }
 
@@ -39,11 +40,12 @@ export const editProject = async (projectId, projectName, description, status) =
         const response = await api.axiosInstance.patch(`/projects/${projectId}`, {
             name: projectName,
             description: description,
-            status: status,
+            status: parseInt(status, 10),
         });
         return response.data;
     }
     catch (err){
-
+        console.error(err.response || err.message || err)
+        throw new Error(err.response?.data?.error || err.message)
     }
 }
