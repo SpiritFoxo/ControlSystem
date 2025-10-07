@@ -20,6 +20,7 @@ import { fetchProjectById } from "../api/Projects";
 import { RequireRole } from "../components/RequiredRole";
 import { ROLES } from "../constants/Roles";
 import Button from "@mui/material/Button";
+import ExportDefectsButton from "../components/ExportButton";
 
 
 const ProjectPage = () => {
@@ -128,7 +129,7 @@ const ProjectPage = () => {
                     </Box>
                     <Grid container>
                         <RequireRole allowedRoles={[ROLES.ENGINEER]}><AddEntityModal entityType={'defect'} projectId={projectId}></AddEntityModal></RequireRole>
-                        <RequireRole allowedRoles={[ROLES.MANAGER, ROLES.OBSERVER]}><Button variant="contained">Экспортировать отчет</Button></RequireRole>
+                        <RequireRole allowedRoles={[ROLES.MANAGER, ROLES.OBSERVER]}><ExportDefectsButton projectId={projectId}></ExportDefectsButton></RequireRole>
                     </Grid>
                 </Grid>
 

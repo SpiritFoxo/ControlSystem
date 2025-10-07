@@ -62,3 +62,25 @@ export const assignEngineer = async (projectId, engineerId) => {
         throw new Error(err.response?.data?.error || err.message)
     }
 }
+
+export const exportDefectsCSV = async (projectId) => {
+    try {
+        const response = await api.axiosInstance.get(`/projects/${projectId}/export`, {
+            responseType: 'blob'
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `project_${projectId}_defects_report.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        return { message: 'CSV exported successfully' };
+    } catch (err) {
+        console.error('Error in exportDefectsCSV:', err.response || err.message || err);
+        throw new Error(err.response?.data?.error || 'Failed to export CSV');
+    }
+};

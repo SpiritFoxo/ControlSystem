@@ -14,4 +14,5 @@ func RegisterProjectsRoutes(r *gin.RouterGroup, s *handlers.Server) {
 	r.GET("/", s.GetProjects)
 	r.POST("/:projectId/assign", s.AssignEngineer)
 	r.GET("/:projectId", s.GetProject)
+	r.GET("/:projectId/export", s.ExportDefectsCSV)
 }

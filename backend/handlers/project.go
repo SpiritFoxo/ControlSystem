@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"ControlSystem/models"
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -331,4 +333,119 @@ func (s *Server) GetProject(c *gin.Context) {
 		"project_name":        project.Name,
 		"project_description": project.Description,
 	})
+}
+
+func (s *Server) ExportDefectsCSV(c *gin.Context) {
+	roleId, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if roleId.(uint) < 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	projectIdStr := c.Param("projectId")
+	projectId, err := strconv.Atoi(projectIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project id"})
+		return
+	}
+
+	var project models.Project
+	if err := s.db.First(&project, projectId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
+		} else {
+			log.Printf("Database error fetching project %d: %v", projectId, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		}
+		return
+	}
+
+	var defects []models.Defect
+	if err := s.db.Where("project_id = ?", projectId).Find(&defects).Error; err != nil {
+		log.Printf("Database error fetching defects for project %d: %v", projectId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	statusCounts := map[uint]int{
+		1: 0, // open
+		2: 0, // in progress
+		3: 0, // resolved
+		4: 0, // overdue
+	}
+	for _, defect := range defects {
+		statusCounts[defect.Status]++
+	}
+
+	c.Header("Content-Type", "text/csv; charset=utf-8")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=project_%d_defects_report.csv", projectId))
+
+	if _, err := c.Writer.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
+		log.Printf("Error writing UTF-8 BOM: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write CSV"})
+		return
+	}
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+	headers := []string{
+		"ID", "Title", "Description", "Priority",
+		"Open", "In Progress", "Resolved", "Overdue",
+		"Assigned To", "Created By", "Deadline",
+	}
+	if err := writer.Write(headers); err != nil {
+		log.Printf("Error writing CSV header: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write CSV header"})
+		return
+	}
+
+	for _, defect := range defects {
+		priorityStr := map[uint]string{1: "Low", 2: "Medium", 3: "High"}[defect.Priority]
+		deadlineStr := ""
+		if defect.Deadline != nil {
+			deadlineStr = defect.Deadline.Format("2006-01-02")
+		}
+		row := []string{
+			strconv.Itoa(int(defect.ID)),
+			defect.Title,
+			defect.Description,
+			priorityStr,
+			"", // Open
+			"", // In Progress
+			"", // Resolved
+			"", // Overdue
+			strconv.Itoa(int(defect.AssignedTo)),
+			strconv.Itoa(int(defect.CreatedBy)),
+			deadlineStr,
+		}
+		if err := writer.Write(row); err != nil {
+			log.Printf("Error writing CSV row: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write CSV row"})
+			return
+		}
+	}
+
+	summaryRow := []string{
+		"",                            // ID
+		"Summary",                     // Title
+		"",                            // Description
+		"",                            // Priority
+		strconv.Itoa(statusCounts[1]), // Open
+		strconv.Itoa(statusCounts[2]), // In Progress
+		strconv.Itoa(statusCounts[3]), // Resolved
+		strconv.Itoa(statusCounts[4]), // Overdue
+		"",                            // Assigned To
+		"",                            // Created By
+		"",                            // Deadline
+	}
+	if err := writer.Write(summaryRow); err != nil {
+		log.Printf("Error writing CSV summary: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write CSV summary"})
+		return
+	}
 }
