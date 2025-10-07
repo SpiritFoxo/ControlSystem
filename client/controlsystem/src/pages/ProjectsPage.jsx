@@ -43,11 +43,6 @@ const ProjectsPage = () => {
         loadProjects(1);
     }, []);
 
-    const handleSearch = (query) => {
-        setSearchQuery(query);
-        loadProjects(1, query);
-    };
-
     return (
         <div className={bakground.background}>
             <Header />
