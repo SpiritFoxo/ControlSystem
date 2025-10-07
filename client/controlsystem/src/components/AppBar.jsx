@@ -5,8 +5,18 @@ import Container from '@mui/material/Container';
 import Toolbar from '@mui/material/Toolbar';
 import { useNavigate } from 'react-router-dom';
 import { RequireRole } from './RequiredRole';
+import { logout } from '../api/Auth';
 
 export const Header = () => {
+    const handleLogout = async () => {
+        try {
+        await logout();
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 1000);
+        } catch (err) {
+        }
+    };
     const nav = useNavigate();
 
     const handleLogoClick = () => {
@@ -23,7 +33,7 @@ export const Header = () => {
                         
                         <Box sx={{ ml: 'auto', gap: {xs: 1, md: 2}, display: 'flex' }}>
                             <RequireRole allowedRoles={[]}><Button variant="contained" href="/admin">Админ-панель</Button></RequireRole>
-                            <Button variant="contained" href="/logout">Выйти</Button>
+                            <Button variant="contained" onClick={handleLogout}>Выйти</Button>
                         </Box>
                     </Toolbar>
                 </Container>

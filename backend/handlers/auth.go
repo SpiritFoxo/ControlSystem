@@ -117,3 +117,32 @@ func (s *Server) RefreshTokenHandler(c *gin.Context) {
 		"role":    user.Role,
 	})
 }
+
+func (s *Server) Logout(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" || len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid Authorization header"})
+		return
+	}
+	accessToken := authHeader[7:]
+
+	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("ACCESS_TOKEN_SECRET")), nil
+	})
+	if err != nil || !token.Valid {
+		log.Printf("Invalid access token during logout for user %v: %v", userId, err)
+	}
+
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
