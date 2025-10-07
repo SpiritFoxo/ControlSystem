@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Backdrop from '@mui/material/Backdrop';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
@@ -11,9 +11,20 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import {
+  List,
+  ListItem,
+  ListItemText,
+  Checkbox,
+  Alert,
+  IconButton,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { createDefect, editDefect } from '../api/Defects';
-import { createProject, editProject } from '../api/Projects';
+import { createProject, editProject, assignEngineer } from '../api/Projects';
+import { getAllUsers } from '../api/Admin';
 import { uploadAttachment } from '../api/Attachments';
+import { PaginationField } from './PaginationField';
 
 const style = {
   position: 'absolute',
@@ -294,6 +305,154 @@ export const EditEntityModal = ({ entityType, entityId, title: initialTitle, des
             </Box>
           </Box>
         </Fade>
+      </Modal>
+    </div>
+  );
+};
+
+export const AssignEngineerModal = ({projectId}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchEmail, setSearchEmail] = useState('');
+  const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({ limit: 10, page: 1, total: 0, totalPages: 1 });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const fetchEngineers = async (page = 1, email = '') => {
+    try {
+      const { users, pagination } = await getAllUsers({ page, email, role: '1' });
+      setUsers(users);
+      setPagination(pagination);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Ошибка при получении списка');
+      setUsers([]);
+      setPagination({ limit: 10, page: 1, total: 0, totalPages: 1 });
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchEngineers(1, searchEmail);
+    }
+  }, [isOpen, searchEmail]);
+
+  const handleAssign = async (engineerId) => {
+    try {
+      const response = await assignEngineer(projectId, engineerId);
+      setSuccess(response.message || 'Успешно назначен');
+      setError('');
+      fetchEngineers(pagination.page, searchEmail);
+    } catch (err) {
+      setError(err.message || 'Ошибка при назначении');
+      setSuccess('');
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchEmail(e.target.value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handlePageChange = (newPage) => {
+    fetchEngineers(newPage, searchEmail);
+  };
+
+  return (
+    <div>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => setIsOpen(true)}
+      >
+        Назначить инженера
+      </Button>
+
+      <Modal
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        aria-labelledby="assign-engineer-modal"
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 1,
+            maxHeight: '80vh',
+            overflowY: 'auto',
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" id="assign-engineer-modal">
+              Назначить инженера в проект {projectId}
+            </Typography>
+            <IconButton onClick={() => setIsOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          <TextField
+            fullWidth
+            label="Поиск по почте"
+            variant="outlined"
+            value={searchEmail}
+            onChange={handleSearch}
+            sx={{ mb: 2 }}
+          />
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {success}
+            </Alert>
+          )}
+
+          <List sx={{ maxHeight: 200, overflowY: 'auto', mb: 2 }}>
+            {users.length === 0 ? (
+              <Typography color="text.secondary" sx={{ p: 2 }}>
+                Пустота
+              </Typography>
+            ) : (
+              users.map((user) => (
+                <ListItem
+                  key={user.id}
+                  sx={{ borderBottom: '1px solid', borderColor: 'divider', py: 1 }}
+                >
+                  <ListItemText primary={user.email} />
+                  <Checkbox
+                    onChange={() => handleAssign(user.id)}
+                    sx={{ color: 'primary.main' }}
+                  />
+                </ListItem>
+              ))
+            )}
+          </List>
+
+          <PaginationField
+            pagination={pagination}
+            onPageChange={handlePageChange}
+          />
+
+          <Button
+            fullWidth
+            variant="contained"
+            color="secondary"
+            onClick={() => setIsOpen(false)}
+            sx={{ mt: 2 }}
+          >
+            Закрыть
+          </Button>
+        </Box>
       </Modal>
     </div>
   );

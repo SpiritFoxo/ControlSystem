@@ -189,7 +189,7 @@ func (s *Server) GetUsers(c *gin.Context) {
 		return
 	}
 
-	if roleId.(uint) < 4 {
+	if roleId.(uint) < 4 && roleId.(uint) != 2 {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
 		return
 	}

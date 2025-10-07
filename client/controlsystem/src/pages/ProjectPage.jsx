@@ -13,7 +13,7 @@ import MenuItem from "@mui/material/MenuItem";
 import {PaginationField} from '../components/PaginationField';
 import {DefectCard, MobileDefectCard} from '../components/Cards'
 import { fetchAllDefects } from '../api/Defects';
-import {AddEntityModal, EditEntityModal} from "../components/Modals";
+import {AddEntityModal, AssignEngineerModal, EditEntityModal} from "../components/Modals";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import { fetchProjectById } from "../api/Projects";
@@ -86,7 +86,10 @@ const ProjectPage = () => {
                 <Typography variant="h4">{projectName}</Typography>
                 <Typography variant="body1">{projectDescription}</Typography>
                 <DefectCounter />
-                <EditEntityModal entityType={"project"} entityId={projectId} title={projectName} description={projectDescription}></EditEntityModal>
+                <Grid container spacing={3}>
+                    <RequireRole allowedRoles={[ROLES.MANAGER]}><EditEntityModal entityType={"project"} entityId={projectId} title={projectName} description={projectDescription}></EditEntityModal></RequireRole>
+                    <RequireRole allowedRoles={[ROLES.MANAGER]}><AssignEngineerModal projectId={projectId}></AssignEngineerModal></RequireRole>
+                </Grid>
                 <Grid container spacing={2} alignItems={'center'} justifyContent={'center'}>
                     <SearchField onSearchClick={() => loadDefects(1, searchQuery)} value={searchQuery} onChange={setSearchQuery} />
                     <Box>
@@ -123,8 +126,10 @@ const ProjectPage = () => {
                             </Select>
                         </FormControl>
                     </Box>
-                    <RequireRole allowedRoles={[ROLES.ENGINEER]}><AddEntityModal entityType={'defect'} projectId={projectId}></AddEntityModal></RequireRole>
-                    <RequireRole allowedRoles={[ROLES.MANAGER]}><Button>Экспортировать отчет</Button></RequireRole>
+                    <Grid container>
+                        <RequireRole allowedRoles={[ROLES.ENGINEER]}><AddEntityModal entityType={'defect'} projectId={projectId}></AddEntityModal></RequireRole>
+                        <RequireRole allowedRoles={[ROLES.MANAGER, ROLES.OBSERVER]}><Button variant="contained">Экспортировать отчет</Button></RequireRole>
+                    </Grid>
                 </Grid>
 
                 {loading && <p>Загрузка...</p>}

@@ -49,3 +49,16 @@ export const editProject = async (projectId, projectName, description, status) =
         throw new Error(err.response?.data?.error || err.message)
     }
 }
+
+export const assignEngineer = async (projectId, engineerId) => {
+    try{
+        const response = await api.axiosInstance.post(`/projects/${projectId}/assign`, {
+            engineer_id: parseInt(engineerId, 10)
+        });
+        return response.data;
+    }
+    catch (err){
+        console.error(err.response || err.message || err)
+        throw new Error(err.response?.data?.error || err.message)
+    }
+}

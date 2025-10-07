@@ -119,7 +119,7 @@ func (s *Server) EditProjectInfo(c *gin.Context) {
 func (s *Server) AssignEngineer(c *gin.Context) {
 
 	type AssignEngineerInput struct {
-		EngineerId []uint `json:"engineerId" binding:"required"`
+		EngineerId uint `json:"engineer_id" binding:"required"`
 	}
 
 	roleId, exists := c.Get("role")
@@ -128,7 +128,7 @@ func (s *Server) AssignEngineer(c *gin.Context) {
 		return
 	}
 
-	if roleId.(uint) != 3 {
+	if roleId.(uint) < 2 {
 		c.JSON(403, gin.H{"error": "forbidden"})
 		return
 	}
@@ -156,44 +156,36 @@ func (s *Server) AssignEngineer(c *gin.Context) {
 		return
 	}
 
-	for _, engId := range input.EngineerId {
-		var user models.User
-		if err := s.db.First(&user, engId).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				c.JSON(404, gin.H{"error": fmt.Sprintf("engineer with ID %d not found", engId)})
-			} else {
-				c.JSON(500, gin.H{"error": "database error"})
-			}
-			return
+	var user models.User
+	if err := s.db.First(&user, input.EngineerId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(404, gin.H{"error": fmt.Sprintf("engineer with ID %d not found", input.EngineerId)})
+		} else {
+			c.JSON(500, gin.H{"error": "database error"})
 		}
-		if user.Role != 1 {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("user with ID %d is not an engineer", engId)})
-			return
-		}
+		return
+	}
+	if user.Role != 1 {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("user with ID %d is not an engineer", input.EngineerId)})
+		return
 	}
 
-	for _, engId := range input.EngineerId {
-		var user models.User
-		if err := s.db.First(&user, engId).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				c.JSON(404, gin.H{"error": fmt.Sprintf("engineer with ID %d not found", engId)})
-			} else {
-				c.JSON(500, gin.H{"error": "database error"})
-			}
-			return
-		}
-		if user.Role != 1 {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("user with ID %d is not an engineer", engId)})
-			return
-		}
-
-		if err := s.db.Model(&project).Association("Users").Append(&user); err != nil {
-			c.JSON(500, gin.H{"error": "failed to assign engineer"})
-			return
-		}
+	var existingUser models.User
+	if err := s.db.Model(&project).Association("Users").Find(&existingUser, input.EngineerId); err == nil && existingUser.ID != 0 {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("engineer with ID %d is already assigned to project %d", input.EngineerId, projectId)})
+		return
 	}
 
-	c.JSON(200, gin.H{"message": "success"})
+	if err := s.db.Model(&project).Association("Users").Append(&user); err != nil {
+		c.JSON(500, gin.H{"error": "failed to assign engineer"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message":     "engineer assigned successfully",
+		"project_id":  projectId,
+		"engineer_id": input.EngineerId,
+	})
 
 }
 
