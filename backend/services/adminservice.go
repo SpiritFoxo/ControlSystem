@@ -6,7 +6,6 @@ import (
 	"ControlSystem/utils"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -84,8 +83,6 @@ func (s *AdminService) RegisterUser(input RegisterUserInput, currentUserRole uin
 	if input.Role >= currentUserRole {
 		return "", errors.New("insufficient permissions to assign this role")
 	}
-
-	log.Println("test")
 
 	newUser := models.User{
 		FirstName:  input.FirstName,
