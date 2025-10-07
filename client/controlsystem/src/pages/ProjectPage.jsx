@@ -26,7 +26,11 @@ import ExportDefectsButton from "../components/ExportButton";
 const ProjectPage = () => {
     const nav = useNavigate();
     const { projectId } = useParams();
-
+    const [totalDefects, setTotalDefects] = useState('');
+    const [openedDefects, setOpenedDefects] = useState('');
+    const [inProgressDefects, setInProgressDefects] = useState('');
+    const [closedDefects, setClosedDefects] = useState('');
+    const [overduedDefects, setOverduedDefects] = useState('');
     const [projectName, setProjectName] = useState('');
     const [projectDescription, setProjectDescription] = useState('');
     const [defects, setDefects] = useState([]);
@@ -63,6 +67,11 @@ const ProjectPage = () => {
                 totalPages: response.pagination.totalPages,
                 limit: response.pagination.limit,
             });
+            setTotalDefects(response.pagination.total);
+            setOpenedDefects(response.statusCounts.open);
+            setClosedDefects(response.statusCounts.resolved);
+            setInProgressDefects(response.statusCounts.in_progress);
+            setOverduedDefects(response.statusCounts.overdue);
         } catch (err) {
             console.error("Ошибка загрузки дефектов:", err);
             setError("Не удалось загрузить дефекты");
@@ -86,7 +95,7 @@ const ProjectPage = () => {
             <div className={bakground.contentParent}>
                 <Typography variant="h4">{projectName}</Typography>
                 <Typography variant="body1">{projectDescription}</Typography>
-                <DefectCounter />
+                <DefectCounter total={totalDefects} opened={openedDefects} resolved={closedDefects} inProgress={inProgressDefects} overdued={overduedDefects}/>
                 <Grid container spacing={3}>
                     <RequireRole allowedRoles={[ROLES.MANAGER]}><EditEntityModal entityType={"project"} entityId={projectId} title={projectName} description={projectDescription}></EditEntityModal></RequireRole>
                     <RequireRole allowedRoles={[ROLES.MANAGER]}><AssignEngineerModal projectId={projectId}></AssignEngineerModal></RequireRole>

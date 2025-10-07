@@ -101,6 +101,16 @@ func (s *Server) GetDefects(c *gin.Context) {
 		PhotoUrl  string        `json:"photoUrl,omitempty"`
 	}
 
+	roleId, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if roleId.(uint) < 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "8")
 	search := c.DefaultQuery("search", "")
@@ -119,8 +129,41 @@ func (s *Server) GetDefects(c *gin.Context) {
 
 	var input GetDefectsInput
 	if err := c.ShouldBindQuery(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	type StatusCount struct {
+		Status uint
+		Count  int64
+	}
+	var statusCounts []StatusCount
+	if err := s.db.Model(&models.Defect{}).
+		Where("project_id = ?", input.ProjectID).
+		Group("status").
+		Select("status, COUNT(*) as count").
+		Find(&statusCounts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	counts := map[string]int64{
+		"open":        0,
+		"in_progress": 0,
+		"resolved":    0,
+		"overdue":     0,
+	}
+	for _, sc := range statusCounts {
+		switch sc.Status {
+		case 1:
+			counts["open"] = sc.Count
+		case 2:
+			counts["in_progress"] = sc.Count
+		case 3:
+			counts["resolved"] = sc.Count
+		case 4:
+			counts["overdue"] = sc.Count
+		}
 	}
 
 	offset := (page - 1) * limit
@@ -128,7 +171,6 @@ func (s *Server) GetDefects(c *gin.Context) {
 	var total int64
 
 	likeSearch := "%" + search + "%"
-
 	query := s.db.Preload("Creator").Model(&models.Defect{}).
 		Where("project_id = ?", input.ProjectID)
 
@@ -137,12 +179,12 @@ func (s *Server) GetDefects(c *gin.Context) {
 	}
 
 	if err := query.Count(&total).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
 
 	if err := query.Offset(offset).Limit(limit).Find(&defects).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
 
@@ -154,7 +196,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 	var attachments []models.Attachment
 	if len(defectIDs) > 0 {
 		if err := s.db.Where("defect_id IN ?", defectIDs).Find(&attachments).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 			return
 		}
 	}
@@ -205,6 +247,7 @@ func (s *Server) GetDefects(c *gin.Context) {
 			"hasNextPage": page < int(totalPages),
 			"hasPrevPage": page > 1,
 		},
+		"statusCounts": counts,
 	})
 }
 
