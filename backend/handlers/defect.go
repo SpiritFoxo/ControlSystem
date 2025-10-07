@@ -101,16 +101,6 @@ func (s *Server) GetDefects(c *gin.Context) {
 		PhotoUrl  string        `json:"photoUrl,omitempty"`
 	}
 
-	roleId, exists := c.Get("role")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	if roleId.(uint) < 2 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
-
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "8")
 	search := c.DefaultQuery("search", "")

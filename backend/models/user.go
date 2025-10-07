@@ -9,6 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	RoleEngineer uint = iota + 1
+	RoleManager
+	RoleObserver
+	RoleAdmin
+	RoleSuperAdmin
+)
+
 type User struct {
 	gorm.Model
 	FirstName  string    `gorm:"not null"`
