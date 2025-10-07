@@ -25,3 +25,7 @@ func (r *AttachmentRepository) GetByDefectIDs(defectIDs []uint) ([]models.Attach
 	err := r.db.Where("defect_id IN ?", defectIDs).Find(&attachments).Error
 	return attachments, err
 }
+
+func (r *AttachmentRepository) Create(attachment *models.Attachment) error {
+	return r.db.Create(attachment).Error
+}

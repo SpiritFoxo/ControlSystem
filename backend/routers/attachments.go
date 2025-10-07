@@ -9,6 +9,9 @@ import (
 )
 
 func RegisterAttachmentsRoutes(r *gin.RouterGroup, s *handlers.Server) {
+
+	h := s.AttachmentHandler
+
 	r.Use(midlleware.JWTMiddleware())
-	r.POST("/", midlleware.RoleMiddleware(models.RoleEngineer, models.RoleManager), s.UploadAttachment)
+	r.POST("/", midlleware.RoleMiddleware(models.RoleEngineer, models.RoleManager), h.UploadAttachment)
 }

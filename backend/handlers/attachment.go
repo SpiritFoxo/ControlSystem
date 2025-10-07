@@ -1,24 +1,34 @@
 package handlers
 
 import (
-	"ControlSystem/models"
-	"fmt"
+	"ControlSystem/services"
+	"io"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/minio/minio-go/v7"
 )
 
-func (s *Server) UploadAttachment(c *gin.Context) {
+type AttachmentHandler struct {
+	service *services.AttachmentService
+}
 
-	roleId, exists := c.Get("role")
+func NewAttachmentHandler(service *services.AttachmentService) *AttachmentHandler {
+	return &AttachmentHandler{service: service}
+}
+
+func (h *AttachmentHandler) UploadAttachment(c *gin.Context) {
+	roleID, exists := c.Get("role")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
 		return
 	}
 
@@ -28,6 +38,7 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
 		return
 	}
+
 	f, err := file.Open()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open file"})
@@ -35,88 +46,50 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 	}
 	defer f.Close()
 
-	projectID, _ := strconv.Atoi(c.PostForm("projectId"))
-	defectID, _ := strconv.Atoi(c.PostForm("defectId"))
-
-	if defectID == 0 && projectID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "either defectId or projectId must be provided"})
-		return
-	}
-
-	if projectID == 0 {
-		if roleId.(uint) != 2 && roleId.(uint) <= 4 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only engineers can attach files"})
-			return
-		}
-	}
-
-	if defectID == 0 {
-		if roleId.(uint) != 3 && roleId.(uint) <= 4 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only managers can attach files"})
-			return
-		}
-	}
-
-	var projectIDPtr *uint
-	if projectID != 0 {
-		var project models.Project
-		if err := s.db.First(&project, projectID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
-			return
-		}
-		tmp := uint(projectID)
-		projectIDPtr = &tmp
-	}
-
-	var defectIDPtr *uint
-	if defectID != 0 {
-		var defect models.Defect
-		if err := s.db.First(&defect, defectID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "defect not found"})
-			return
-		}
-		tmp := uint(defectID)
-		defectIDPtr = &tmp
-	}
-
-	ext := strings.ToLower(filepath.Ext(file.Filename))
-	var bucketName string
-	switch ext {
-	case ".png", ".jpg", ".jpeg":
-		bucketName = "images"
-	case ".pdf", ".docx":
-		bucketName = "files"
-	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported file type"})
-		return
-	}
-
-	fileName := fmt.Sprintf("%s%s", generateUniqueName(), ext)
-
-	_, err = s.MinIo.Client.PutObject(c, bucketName, fileName, f, file.Size, minio.PutObjectOptions{
-		ContentType: file.Header.Get("Content-Type"),
-	})
+	fileContent, err := io.ReadAll(f)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to upload file: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read file"})
 		return
 	}
 
-	userId, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
-		return
+	projectIDStr := c.PostForm("projectId")
+	defectIDStr := c.PostForm("defectId")
+
+	var projectID *uint
+	if projectIDStr != "" {
+		pID, _ := strconv.ParseUint(projectIDStr, 10, 32)
+		tmp := uint(pID)
+		projectID = &tmp
 	}
 
-	attachment := models.Attachment{
-		DefectID:   defectIDPtr,
-		ProjectID:  projectIDPtr,
-		FileName:   fileName,
-		FilePath:   bucketName,
-		FileType:   ext,
-		UploadedBy: userId.(uint),
+	var defectID *uint
+	if defectIDStr != "" {
+		dID, _ := strconv.ParseUint(defectIDStr, 10, 32)
+		tmp := uint(dID)
+		defectID = &tmp
 	}
-	if err := s.db.Create(&attachment).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save attachment to database"})
+
+	input := services.UploadAttachmentInput{
+		FileName:    file.Filename,
+		FileContent: fileContent,
+		ContentType: file.Header.Get("Content-Type"),
+		ProjectID:   projectID,
+		DefectID:    defectID,
+		UploadedBy:  userID.(uint),
+		RoleID:      roleID.(uint),
+	}
+
+	attachment, err := h.service.UploadAttachment(input)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "project not found" || err.Error() == "defect not found" {
+			statusCode = http.StatusNotFound
+		} else if strings.HasPrefix(err.Error(), "forbidden:") || err.Error() == "unsupported file type" {
+			statusCode = http.StatusForbidden
+		} else if err.Error() == "either defectId or projectId must be provided" {
+			statusCode = http.StatusBadRequest
+		}
+		c.JSON(statusCode, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -124,8 +97,4 @@ func (s *Server) UploadAttachment(c *gin.Context) {
 		"message":    "file uploaded successfully",
 		"attachment": attachment.ID,
 	})
-}
-
-func generateUniqueName() string {
-	return fmt.Sprintf("file-%d", time.Now().UnixNano())
 }
