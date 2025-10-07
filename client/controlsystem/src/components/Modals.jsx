@@ -54,6 +54,19 @@ const roleMap = {
     4: 'Администратор'
 };
 
+const projectStatusMap = {
+  1: 'Активный',
+  2: 'Завершен',
+  3: 'Архивный',
+};
+
+const defectStatusMap = {
+  1: 'Открытый',
+  2: 'В работе',
+  3: 'Исправлен',
+  4: 'Просрочен',
+};
+
 export const AddEntityModal = ({ entityType, projectId }) => {
   const [open, setOpen] = React.useState(false);
   const [files, setFiles] = React.useState([]);
@@ -181,8 +194,8 @@ export const EditEntityModal = ({ entityType, entityId, title: initialTitle, des
   const [files, setFiles] = useState([]);
   const [title, setTitle] = useState(initialTitle || '');
   const [description, setDescription] = useState(initialDescription || '');
-  const [status, setStatus] = useState(initialStatus || 'Новая');
-  const [priority, setPriority] = useState(initialPriority || 'Средний');
+  const [status, setStatus] = useState(initialStatus || 1);
+  const [priority, setPriority] = useState(initialPriority || 2);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
@@ -190,8 +203,8 @@ export const EditEntityModal = ({ entityType, entityId, title: initialTitle, des
     setFiles([]);
     setTitle(initialTitle || '');
     setDescription(initialDescription || '');
-    setStatus(initialStatus || 'Новая');
-    setPriority(initialPriority || 'Средний');
+    setStatus(initialStatus || 1);
+    setPriority(initialPriority || 2);
   };
 
   const handleTitleChange = (event) => {
@@ -280,16 +293,23 @@ export const EditEntityModal = ({ entityType, entityId, title: initialTitle, des
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel id="status-label">Статус</InputLabel>
               <Select
-                labelId="status-label"
-                value={status}
-                label="Статус"
-                onChange={handleStatusChange}
-              >
-                <MenuItem value="1">Открытый</MenuItem>
-                <MenuItem value="2">В работе</MenuItem>
-                <MenuItem value="3">Исправлен</MenuItem>
-                <MenuItem value="4">Просрочен</MenuItem>
-              </Select>
+              labelId="status-label"
+              value={status}
+              label="Статус"
+              onChange={handleStatusChange}
+            >
+              {entityType === 'project'
+                ? Object.entries(projectStatusMap).map(([key, label]) => (
+                    <MenuItem key={key} value={key}>
+                      {label}
+                    </MenuItem>
+                  ))
+                : Object.entries(defectStatusMap).map(([key, label]) => (
+                    <MenuItem key={key} value={key}>
+                      {label}
+                    </MenuItem>
+                  ))}
+            </Select>
             </FormControl>
             {entityType === 'defect' && (
               <FormControl fullWidth sx={{ mb: 2 }}>
