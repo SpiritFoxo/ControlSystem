@@ -12,6 +12,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import { getAllUsers } from '../api/Admin';
 import Box from "@mui/material/Box";
+import { EditUserModal } from './Modals';
 
 export const AdminTable = ({ tableWidth, page, searchQuery, onUserUpdate }) => {
     const [users, setUsers] = useState([]);
@@ -19,6 +20,8 @@ export const AdminTable = ({ tableWidth, page, searchQuery, onUserUpdate }) => {
     const [error, setError] = useState(null);
     const [roleFilter, setRoleFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
 
     const roleMap = {
         1: 'Инженер',
@@ -45,10 +48,16 @@ export const AdminTable = ({ tableWidth, page, searchQuery, onUserUpdate }) => {
             }
         };
         fetchUsers();
-    }, [page, searchQuery, roleFilter, statusFilter, onUserUpdate]);
+    }, [page, searchQuery, roleFilter, statusFilter]);
 
     const handleEdit = (user) => {
-        console.log(`Редактирование пользователя с ID: ${user.id}`);
+        setCurrentUser(user);
+        setOpenEditDialog(true);
+    };
+
+    const handleCloseEditDialog = () => {
+        setOpenEditDialog(false);
+        setCurrentUser(null);
     };
 
     if (loading) return <div>Загрузка...</div>;
@@ -99,7 +108,7 @@ export const AdminTable = ({ tableWidth, page, searchQuery, onUserUpdate }) => {
                         {users.length > 0 ? (
                             users.map((user) => (
                                 <TableRow key={user.id}>
-                                    <TableCell>{`${user.lastName} ${user.firstName} ${user.middleName || ''}`}</TableCell>
+                                    <TableCell>{`${user.last_name} ${user.first_name} ${user.middle_name || ''}`}</TableCell>
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell>{roleMap[user.role] || 'Неизвестная роль'}</TableCell>
                                     <TableCell>{user.is_enabled ? 'Активен' : 'Отключён'}</TableCell>
@@ -123,6 +132,15 @@ export const AdminTable = ({ tableWidth, page, searchQuery, onUserUpdate }) => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {currentUser && (
+                <EditUserModal
+                    open={openEditDialog}
+                    user={currentUser}
+                    onClose={handleCloseEditDialog}
+                    onUserUpdate={onUserUpdate}
+                />
+            )}
         </Box>
     );
 };

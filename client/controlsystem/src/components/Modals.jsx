@@ -1,28 +1,32 @@
-import * as React from 'react';
-import { useState, useEffect } from 'react';
-import Backdrop from '@mui/material/Backdrop';
-import Box from '@mui/material/Box';
-import Modal from '@mui/material/Modal';
-import Fade from '@mui/material/Fade';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/FormControl';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
+import React from 'react';
+import { useEffect, useState } from 'react';
 import {
+  Alert,
+  Backdrop,
+  Box,
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Fade,
+  FormControl,
+  IconButton,
+  InputLabel,
   List,
   ListItem,
   ListItemText,
-  Checkbox,
-  Alert,
-  IconButton,
+  MenuItem,
+  Modal,
+  Select,
+  TextField,
+  Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { assignEngineer, createProject, editProject } from '../api/Projects';
 import { createDefect, editDefect } from '../api/Defects';
-import { createProject, editProject, assignEngineer } from '../api/Projects';
-import { getAllUsers } from '../api/Admin';
+import { getAllUsers, editUser } from '../api/Admin';
 import { uploadAttachment } from '../api/Attachments';
 import { PaginationField } from './PaginationField';
 
@@ -41,6 +45,13 @@ const style = {
   alignItems: 'center',
   textAlign: 'center',
   sm: {width:'250px'},
+};
+
+const roleMap = {
+    1: 'Инженер',
+    2: 'Менеджер',
+    3: 'Руководитель',
+    4: 'Администратор'
 };
 
 export const AddEntityModal = ({ entityType, projectId }) => {
@@ -456,4 +467,105 @@ export const AssignEngineerModal = ({projectId}) => {
       </Modal>
     </div>
   );
+};
+
+export const EditUserModal = ({ open, user, onClose, onUserUpdate }) => {
+    const [editForm, setEditForm] = useState({
+        firstName: user?.first_name || '',
+        middleName: user?.middle_name || '',
+        lastName: user?.last_name || '',
+        role: user?.role || '',
+        isEnabled: user?.is_enabled ?? true,
+    });
+    const [error, setError] = useState(null);
+
+    const handleEditFormChange = (e) => {
+        const { name, value } = e.target;
+        setEditForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleEditSubmit = async () => {
+        try {
+            await editUser(
+                user.id,
+                editForm.firstName,
+                editForm.middleName,
+                editForm.lastName,
+                editForm.role,
+                editForm.isEnabled
+            );
+            onUserUpdate();
+            onClose();
+        } catch (err) {
+          console.log(err);
+          setError('Ошибка при обновлении пользователя');
+        }
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose}>
+            <DialogTitle>Редактировать пользователя</DialogTitle>
+            <DialogContent>
+                {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+                <TextField
+                    margin="dense"
+                    name="firstName"
+                    label="Имя"
+                    type="text"
+                    fullWidth
+                    value={editForm.firstName}
+                    onChange={handleEditFormChange}
+                />
+                <TextField
+                    margin="dense"
+                    name="middleName"
+                    label="Отчество"
+                    type="text"
+                    fullWidth
+                    value={editForm.middleName}
+                    onChange={handleEditFormChange}
+                />
+                <TextField
+                    margin="dense"
+                    name="lastName"
+                    label="Фамилия"
+                    type="text"
+                    fullWidth
+                    value={editForm.lastName}
+                    onChange={handleEditFormChange}
+                />
+                <FormControl fullWidth margin="dense">
+                    <InputLabel>Роль</InputLabel>
+                    <Select
+                        name="role"
+                        value={editForm.role}
+                        onChange={handleEditFormChange}
+                        label="Роль"
+                    >
+                        {Object.entries(roleMap).map(([key, label]) => (
+                            <MenuItem key={key} value={key}>{label}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                <FormControl fullWidth margin="dense">
+                    <InputLabel>Статус</InputLabel>
+                    <Select
+                        name="isEnabled"
+                        value={editForm.isEnabled}
+                        onChange={handleEditFormChange}
+                        label="Статус"
+                    >
+                        <MenuItem value={true}>Активен</MenuItem>
+                        <MenuItem value={false}>Отключён</MenuItem>
+                    </Select>
+                </FormControl>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Отмена</Button>
+                <Button onClick={handleEditSubmit} variant="contained" color="primary">
+                    Сохранить
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 };

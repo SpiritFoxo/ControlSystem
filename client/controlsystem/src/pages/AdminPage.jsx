@@ -104,6 +104,10 @@ const AdminPage = () => {
         setPage(newPage);
     };
 
+    const handleUserUpdate = () => {
+        setUserUpdateTrigger((prev) => prev + 1);
+  };
+
     return (
         <div className={background.background}>
             <Header />
@@ -204,7 +208,7 @@ const AdminPage = () => {
                     tableWidth={"74vw"}
                     page={page}
                     searchQuery={searchQuery}
-                    onUserUpdate={userUpdateTrigger}
+                    onUserUpdate={handleUserUpdate}
                 />
             </div>
         </div>

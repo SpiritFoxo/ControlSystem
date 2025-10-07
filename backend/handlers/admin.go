@@ -169,12 +169,13 @@ func (s *Server) EditUserInfo(c *gin.Context) {
 
 func (s *Server) GetUsers(c *gin.Context) {
 	type UserResponse struct {
-		ID        uint   `json:"id"`
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Email     string `json:"email"`
-		Role      uint   `json:"role"`
-		IsEnabled bool   `json:"is_enabled"`
+		ID         uint   `json:"id"`
+		FirstName  string `json:"first_name"`
+		MiddleName string `json:"middle_name"`
+		LastName   string `json:"last_name"`
+		Email      string `json:"email"`
+		Role       uint   `json:"role"`
+		IsEnabled  bool   `json:"is_enabled"`
 	}
 
 	roleId, exists := c.Get("role")
@@ -248,12 +249,13 @@ func (s *Server) GetUsers(c *gin.Context) {
 	response := make([]UserResponse, 0, len(users))
 	for _, u := range users {
 		response = append(response, UserResponse{
-			ID:        u.ID,
-			FirstName: u.FirstName,
-			LastName:  u.LastName,
-			Email:     u.Email,
-			Role:      u.Role,
-			IsEnabled: u.IsEnabled,
+			ID:         u.ID,
+			FirstName:  u.FirstName,
+			MiddleName: u.MiddleName,
+			LastName:   u.LastName,
+			Email:      u.Email,
+			Role:       u.Role,
+			IsEnabled:  u.IsEnabled,
 		})
 	}
 
