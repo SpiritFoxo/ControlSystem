@@ -4,6 +4,7 @@ import (
 	"ControlSystem/models"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -17,13 +18,20 @@ import (
 func GenerateCorporateEmail(firstName, lastName string, db *gorm.DB) (string, error) {
 	firstName = Transliterate(firstName)
 	lastName = Transliterate(lastName)
+
 	base := fmt.Sprintf("%s.%s@controlsystem.ru", strings.ToLower(firstName), strings.ToLower(lastName))
 	email := base
 	suffix := 1
+
 	for {
 		var user models.User
-		if db.Where("email = ?", email).First(&user).Error != nil {
+		err := db.Where("email = ?", email).First(&user).Error
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return email, nil
+		}
+		if err != nil {
+			return "", fmt.Errorf("ошибка проверки email: %w", err)
 		}
 		email = fmt.Sprintf("%s.%s%d@controlsystem.ru", strings.ToLower(firstName), strings.ToLower(lastName), suffix)
 		suffix++

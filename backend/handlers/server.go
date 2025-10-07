@@ -14,7 +14,9 @@ type Server struct {
 
 	projectService    *services.ProjectService
 	attachmentService *services.AttachmentService
+	adminService      *services.AdminService
 
+	AdminHandler      *AdminHandler
 	ProjectHandler    *ProjectHandler
 	AttachmentHandler *AttachmentHandler
 }
@@ -24,6 +26,7 @@ func NewServer(db *gorm.DB, minio *storage.MinioClient) *Server {
 	userRepo := repositories.NewUserRepository(db)
 	defectRepo := repositories.NewDefectRepository(db)
 	attachRepo := repositories.NewAttachmentRepository(db)
+	adminRepo := repositories.NewAdminRepository(db)
 
 	projectService := services.NewProjectService(
 		projectRepo,
@@ -40,12 +43,17 @@ func NewServer(db *gorm.DB, minio *storage.MinioClient) *Server {
 		minio,
 	)
 
+	adminService := services.NewAdminService(db, userRepo, adminRepo)
+
+	adminHandler := NewAdminHandler(adminService)
 	projectHandler := NewProjectHandler(projectService)
 	attachmentHandler := NewAttachmentHandler(attachmentService)
 
 	return &Server{
 		db:                db,
 		MinIo:             minio,
+		AdminHandler:      adminHandler,
+		adminService:      adminService,
 		projectService:    projectService,
 		ProjectHandler:    projectHandler,
 		AttachmentHandler: attachmentHandler,
