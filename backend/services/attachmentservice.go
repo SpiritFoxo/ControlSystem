@@ -56,12 +56,12 @@ func (s *AttachmentService) UploadAttachment(input UploadAttachmentInput) (*mode
 	}
 
 	if input.DefectID != nil {
-		if input.RoleID != models.RoleEngineer && input.RoleID <= 4 {
+		if input.RoleID != models.RoleEngineer && input.RoleID <= models.RoleAdmin {
 			return nil, errors.New("forbidden: only engineers can attach files to defects")
 		}
 	}
 	if input.ProjectID != nil {
-		if input.RoleID != models.RoleManager && input.RoleID <= 4 {
+		if input.RoleID != models.RoleManager && input.RoleID <= models.RoleAdmin {
 			return nil, errors.New("forbidden: only managers can attach files to projects")
 		}
 	}

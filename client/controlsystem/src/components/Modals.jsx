@@ -105,7 +105,7 @@ export const AddEntityModal = ({ entityType, projectId }) => {
       switch (entityType) {
         case 'project':
           response = await createProject(title, description);
-          entityId = response.project_id;
+          entityId = response.project?.ID;
           break;
         case 'defect':
           response = await createDefect(projectId, title, description);

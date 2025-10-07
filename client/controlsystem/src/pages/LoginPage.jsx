@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../api/axiosInstance";
+import api, { API_BASE_URL } from "../api/axiosInstance";
 import styles from "../css/LoginPage.module.css";
 
 const LoginPage = () => {

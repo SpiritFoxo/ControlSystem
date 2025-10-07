@@ -7,7 +7,6 @@ import (
 	"ControlSystem/storage"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -30,10 +29,14 @@ func SetupRouter() *gin.Engine {
 	server := handlers.NewServer(db, minioClient)
 
 	r.Use(cors.New(cors.Config{
-		AllowOriginFunc: func(origin string) bool {
-			return strings.HasPrefix(origin, "http://localhost:") || origin == "http://localhost"
+		AllowOrigins: []string{
+			os.Getenv("CLIENT_URL"),
+			"http://localhost",
+			"http://localhost:80",
+			"http://127.0.0.1",
+			"http://127.0.0.1:80",
 		},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowMethods: []string{"GET", "POST", "OPTIONS", "PATCH"},
 		AllowHeaders: []string{
 			"Origin",
 			"Content-Type",
