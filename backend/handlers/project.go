@@ -1,389 +1,233 @@
 package handlers
 
 import (
-	"ControlSystem/models"
+	"ControlSystem/services"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func (s *Server) CreateProject(c *gin.Context) {
+type ProjectHandler struct {
+	service *services.ProjectService
+}
 
-	type CreateProjectInput struct {
+func NewProjectHandler(service *services.ProjectService) *ProjectHandler {
+	return &ProjectHandler{service: service}
+}
+
+func (h *ProjectHandler) CreateProject(c *gin.Context) {
+	type CreateProjectRequest struct {
 		Name        string `json:"name" binding:"required,min=3"`
 		Description string `json:"description"`
 	}
 
-	var input CreateProjectInput
-
-	roleId, exists := c.Get("role")
-	if !exists {
-		c.JSON(401, gin.H{"error": "unauthorized"})
+	var req CreateProjectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if roleId.(uint) != 2 && roleId.(uint) != 4 && roleId.(uint) != 5 {
-		c.JSON(403, gin.H{"error": "forbidden"})
+	input := services.CreateProjectInput{
+		Name:        req.Name,
+		Description: req.Description,
+	}
+
+	project, err := h.service.CreateProject(input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	project := models.Project{
-		Name:        input.Name,
-		Description: input.Description,
-		Status:      1,
-	}
-
-	if err := s.db.Create(&project).Error; err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(201, gin.H{"project_id": project.ID})
+	c.JSON(http.StatusCreated, gin.H{"project": project})
 }
 
-func (s *Server) EditProjectInfo(c *gin.Context) {
-
-	type EditProjectInfoInput struct {
+func (h *ProjectHandler) EditProjectInfo(c *gin.Context) {
+	type EditProjectRequest struct {
 		Name        string `json:"name" binding:"omitempty"`
 		Description string `json:"description" binding:"omitempty"`
 		Status      uint   `json:"status" binding:"omitempty"`
 	}
 
-	roleId, exists := c.Get("role")
-	if !exists {
-		c.JSON(401, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	if roleId.(uint) < 2 {
-		c.JSON(403, gin.H{"error": "forbidden"})
-		return
-	}
-
-	var input EditProjectInfoInput
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	projectId, err := strconv.Atoi(c.Param("projectId"))
+	projectID, err := strconv.ParseUint(c.Param("projectId"), 10, 32)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid project id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project id"})
 		return
 	}
 
-	var project models.Project
-	if err := s.db.First(&project, projectId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(404, gin.H{"error": "project not found"})
+	var req EditProjectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	input := services.UpdateProjectInput{}
+	if req.Name != "" {
+		input.Name = &req.Name
+	}
+	if req.Description != "" {
+		input.Description = &req.Description
+	}
+	if req.Status > 0 {
+		input.Status = &req.Status
+	}
+
+	project, err := h.service.UpdateProject(uint(projectID), input)
+	if err != nil {
+		if err.Error() == "project not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
-			c.JSON(500, gin.H{"error": "database error"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}
 
-	updates := map[string]interface{}{}
-	if input.Name != "" {
-		updates["name"] = input.Name
-	}
-	if input.Description != "" {
-		updates["description"] = input.Description
-	}
-	if input.Status > 0 {
-		updates["status"] = input.Status
-	}
-	if len(updates) == 0 {
-		c.JSON(200, gin.H{"message": "no changes"})
-		return
-	}
-
-	if err := s.db.Model(&project).Updates(updates).Error; err != nil {
-		c.JSON(500, gin.H{"error": "failed to update project"})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "project updated", "project": project})
+	c.JSON(http.StatusOK, gin.H{"message": "project updated", "project": project})
 }
 
-func (s *Server) AssignEngineer(c *gin.Context) {
-
-	type AssignEngineerInput struct {
+func (h *ProjectHandler) AssignEngineer(c *gin.Context) {
+	type AssignEngineerRequest struct {
 		EngineerId uint `json:"engineer_id" binding:"required"`
 	}
 
-	roleId, exists := c.Get("role")
-	if !exists {
-		c.JSON(401, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	if roleId.(uint) < 2 {
-		c.JSON(403, gin.H{"error": "forbidden"})
-		return
-	}
-
-	var input AssignEngineerInput
-
-	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	projectId, err := strconv.Atoi(c.Param("projectId"))
+	projectID, err := strconv.ParseUint(c.Param("projectId"), 10, 32)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid project id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project id"})
 		return
 	}
 
-	var project models.Project
-	if err := s.db.First(&project, projectId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(404, gin.H{"error": "project not found"})
-		} else {
-			c.JSON(500, gin.H{"error": "database error"})
+	var req AssignEngineerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.service.AssignEngineer(uint(projectID), req.EngineerId)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "project not found" ||
+			err.Error() == fmt.Sprintf("engineer with ID %d not found", req.EngineerId) {
+			statusCode = http.StatusNotFound
+		} else if err.Error() == fmt.Sprintf("user with ID %d is not an engineer", req.EngineerId) ||
+			err.Error() == fmt.Sprintf("engineer with ID %d is already assigned to project %d", req.EngineerId, projectID) {
+			statusCode = http.StatusBadRequest
 		}
+		c.JSON(statusCode, gin.H{"error": err.Error()})
 		return
 	}
 
-	var user models.User
-	if err := s.db.First(&user, input.EngineerId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(404, gin.H{"error": fmt.Sprintf("engineer with ID %d not found", input.EngineerId)})
-		} else {
-			c.JSON(500, gin.H{"error": "database error"})
-		}
-		return
-	}
-	if user.Role != 1 {
-		c.JSON(400, gin.H{"error": fmt.Sprintf("user with ID %d is not an engineer", input.EngineerId)})
-		return
-	}
-
-	var existingUser models.User
-	if err := s.db.Model(&project).Association("Users").Find(&existingUser, input.EngineerId); err == nil && existingUser.ID != 0 {
-		c.JSON(400, gin.H{"error": fmt.Sprintf("engineer with ID %d is already assigned to project %d", input.EngineerId, projectId)})
-		return
-	}
-
-	if err := s.db.Model(&project).Association("Users").Append(&user); err != nil {
-		c.JSON(500, gin.H{"error": "failed to assign engineer"})
-		return
-	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message":     "engineer assigned successfully",
-		"project_id":  projectId,
-		"engineer_id": input.EngineerId,
+		"project_id":  projectID,
+		"engineer_id": req.EngineerId,
 	})
-
 }
 
-func (s *Server) GetProjects(c *gin.Context) {
+func (h *ProjectHandler) GetProjects(c *gin.Context) {
 	type ProjectResponse struct {
 		ID       uint   `json:"id"`
 		Name     string `json:"name"`
 		PhotoURL string `json:"photoUrl,omitempty"`
 	}
 
-	roleId, exists := c.Get("role")
-	if !exists {
-		c.JSON(401, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	userId, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(401, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "10")
-	search := c.DefaultQuery("search", "")
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page number"})
-		return
-	}
-
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit value"})
-		return
-	}
-
-	offset := (page - 1) * limit
-	var projects []ProjectResponse
-	var total int64
-
-	likeSearch := "%" + search + "%"
-
-	switch roleId.(uint) {
-	case 1:
-		query := s.db.Model(&models.Project{}).
-			Joins("JOIN user_project ON user_project.project_id = projects.id").
-			Where("user_project.user_id = ?", userId.(uint))
-
-		if search != "" {
-			query = query.Where("projects.name LIKE ?", likeSearch)
-		}
-
-		if err := query.Count(&total).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if err := query.Select("projects.id, projects.name").
-			Offset(offset).Limit(limit).
-			Scan(&projects).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-	default:
-		query := s.db.Model(&models.Project{})
-		if search != "" {
-			query = query.Where("name LIKE ?", likeSearch)
-		}
-
-		if err := query.Count(&total).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if err := query.Select("id, name").
-			Offset(offset).Limit(limit).
-			Scan(&projects).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-	}
-
-	var attachments []models.Attachment
-	projectIDs := make([]uint, len(projects))
-	for i, p := range projects {
-		projectIDs[i] = p.ID
-	}
-
-	if err := s.db.Where("project_id IN ?", projectIDs).Find(&attachments).Error; err == nil {
-		attMap := make(map[uint]models.Attachment)
-		for _, a := range attachments {
-			if a.ProjectID != nil {
-				attMap[*a.ProjectID] = a
-			}
-		}
-		for i := range projects {
-			if att, ok := attMap[projects[i].ID]; ok {
-				if url, err := s.MinIo.GetFileURL(att.FilePath, att.FileName, 24*time.Hour); err == nil {
-					projects[i].PhotoURL = url
-				}
-			}
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"projects": projects,
-		"pagination": gin.H{
-			"page":       page,
-			"limit":      limit,
-			"total":      total,
-			"totalPages": (total + int64(limit) - 1) / int64(limit),
-		},
-	})
-}
-
-func (s *Server) GetProject(c *gin.Context) {
-	projectIdStr := c.Param("projectId")
-	if projectIdStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "projectId is required"})
-		return
-	}
-
-	projectID, err := strconv.ParseUint(projectIdStr, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid projectId: " + err.Error()})
-		return
-	}
-
-	var project models.Project
-	if err := s.db.First(&project, uint(projectID)).Error; err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve project"})
-		}
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"project_name":        project.Name,
-		"project_description": project.Description,
-	})
-}
-
-func (s *Server) ExportDefectsCSV(c *gin.Context) {
-	roleId, exists := c.Get("role")
+	roleID, exists := c.Get("role")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	if roleId.(uint) < 2 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	projectIdStr := c.Param("projectId")
-	projectId, err := strconv.Atoi(projectIdStr)
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page number"})
+		return
+	}
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if err != nil || limit < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit value"})
+		return
+	}
+
+	search := c.DefaultQuery("search", "")
+
+	result, err := h.service.GetProjects(userID.(uint), roleID.(uint), page, limit, search)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	response := make([]ProjectResponse, len(result.Projects))
+	for i, p := range result.Projects {
+		response[i] = ProjectResponse{
+			ID:       p.ID,
+			Name:     p.Name,
+			PhotoURL: p.PhotoURL,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"projects": response,
+		"pagination": gin.H{
+			"page":       result.Page,
+			"limit":      result.Limit,
+			"total":      result.Total,
+			"totalPages": result.TotalPages,
+		},
+	})
+}
+
+func (h *ProjectHandler) GetProject(c *gin.Context) {
+	projectID, err := strconv.ParseUint(c.Param("projectId"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid projectId"})
+		return
+	}
+
+	details, err := h.service.GetProjectDetails(uint(projectID))
+	if err != nil {
+		if err.Error() == "project not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"project_name":        details.Name,
+		"project_description": details.Description,
+	})
+}
+
+func (h *ProjectHandler) ExportDefectsCSV(c *gin.Context) {
+	projectID, err := strconv.ParseUint(c.Param("projectId"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project id"})
 		return
 	}
 
-	var project models.Project
-	if err := s.db.First(&project, projectId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
+	defects, summary, err := h.service.GetDefectsForExport(uint(projectID))
+	if err != nil {
+		if err.Error() == "project not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
-			log.Printf("Database error fetching project %d: %v", projectId, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+			log.Printf("Error exporting defects: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to export defects"})
 		}
 		return
 	}
 
-	var defects []models.Defect
-	if err := s.db.Where("project_id = ?", projectId).Find(&defects).Error; err != nil {
-		log.Printf("Database error fetching defects for project %d: %v", projectId, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
-		return
-	}
-
-	statusCounts := map[uint]int{
-		1: 0, // open
-		2: 0, // in progress
-		3: 0, // resolved
-		4: 0, // overdue
-	}
-	for _, defect := range defects {
-		statusCounts[defect.Status]++
-	}
-
 	c.Header("Content-Type", "text/csv; charset=utf-8")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=project_%d_defects_report.csv", projectId))
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=project_%d_defects_report.csv", projectID))
 
 	if _, err := c.Writer.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
 		log.Printf("Error writing UTF-8 BOM: %v", err)
@@ -393,6 +237,7 @@ func (s *Server) ExportDefectsCSV(c *gin.Context) {
 
 	writer := csv.NewWriter(c.Writer)
 	defer writer.Flush()
+
 	headers := []string{
 		"ID", "Title", "Description", "Priority",
 		"Open", "In Progress", "Resolved", "Overdue",
@@ -400,52 +245,42 @@ func (s *Server) ExportDefectsCSV(c *gin.Context) {
 	}
 	if err := writer.Write(headers); err != nil {
 		log.Printf("Error writing CSV header: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write CSV header"})
 		return
 	}
 
+	priorityMap := map[uint]string{1: "Low", 2: "Medium", 3: "High"}
+
 	for _, defect := range defects {
-		priorityStr := map[uint]string{1: "Low", 2: "Medium", 3: "High"}[defect.Priority]
 		deadlineStr := ""
 		if defect.Deadline != nil {
 			deadlineStr = defect.Deadline.Format("2006-01-02")
 		}
+
 		row := []string{
 			strconv.Itoa(int(defect.ID)),
 			defect.Title,
 			defect.Description,
-			priorityStr,
-			"", // Open
-			"", // In Progress
-			"", // Resolved
-			"", // Overdue
+			priorityMap[defect.Priority],
+			"", "", "", "",
 			strconv.Itoa(int(defect.AssignedTo)),
 			strconv.Itoa(int(defect.CreatedBy)),
 			deadlineStr,
 		}
 		if err := writer.Write(row); err != nil {
 			log.Printf("Error writing CSV row: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write CSV row"})
 			return
 		}
 	}
 
 	summaryRow := []string{
-		"",                            // ID
-		"Summary",                     // Title
-		"",                            // Description
-		"",                            // Priority
-		strconv.Itoa(statusCounts[1]), // Open
-		strconv.Itoa(statusCounts[2]), // In Progress
-		strconv.Itoa(statusCounts[3]), // Resolved
-		strconv.Itoa(statusCounts[4]), // Overdue
-		"",                            // Assigned To
-		"",                            // Created By
-		"",                            // Deadline
+		"", "Summary", "", "",
+		strconv.Itoa(summary.Open),
+		strconv.Itoa(summary.InProgress),
+		strconv.Itoa(summary.Resolved),
+		strconv.Itoa(summary.Overdue),
+		"", "", "",
 	}
 	if err := writer.Write(summaryRow); err != nil {
 		log.Printf("Error writing CSV summary: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write CSV summary"})
-		return
 	}
 }
