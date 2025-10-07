@@ -1,10 +1,23 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
+
+const getStatusColor = (defectStatus) => {
+  switch (defectStatus) {
+    case 1: // Open
+      return '#00BBFF';
+    case 2: // In Progress
+      return '#F8BE00';
+    case 3: // Resolved
+      return '#6FDF00';
+    case 4: // Overdue
+      return 'red';
+    default:
+      return 'gray'; // Fallback
+  }
+};
 
 export const ProjectCard = ({ title, photoUrl, onClick }) => {
     const imagePhoto = photoUrl || "/images/placeholder-project-desktop.jpg";
@@ -69,7 +82,7 @@ export const DefectCard = ({ title, authorName, defectStatus, defectName, photoU
                 <Typography>{authorName}</Typography>
                 <div
                     style={{
-                        background: defectStatus === 1 ? "yellow" : "red",
+                        background: getStatusColor(defectStatus),
                         borderRadius: "999px",
                         width: 10,
                         height: 10,
@@ -96,7 +109,7 @@ export const MobileDefectCard = ({ title, defectStatus, defectName, photoUrl, on
             <CardContent>
                 <div
                     style={{
-                        background: defectStatus === 1 ? "yellow" : "red",
+                        background: getStatusColor(defectStatus),
                         borderRadius: "999px",
                         width: 40,
                         height: 40,

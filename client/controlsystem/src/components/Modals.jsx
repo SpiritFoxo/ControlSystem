@@ -274,10 +274,10 @@ export const EditEntityModal = ({ entityType, entityId, title: initialTitle, des
                 label="Статус"
                 onChange={handleStatusChange}
               >
-                <MenuItem value="1">Новая</MenuItem>
+                <MenuItem value="1">Открытый</MenuItem>
                 <MenuItem value="2">В работе</MenuItem>
-                <MenuItem value="3">На проверке</MenuItem>
-                <MenuItem value="4">Закрыта</MenuItem>
+                <MenuItem value="3">Исправлен</MenuItem>
+                <MenuItem value="4">Просрочен</MenuItem>
               </Select>
             </FormControl>
             {entityType === 'defect' && (
