@@ -9,20 +9,23 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/resend/resend-go/v2"
 	"gorm.io/gorm"
 )
 
 type AdminService struct {
-	db        *gorm.DB
-	userRepo  *repositories.UserRepository
-	adminRepo *repositories.AdminRepository
+	db           *gorm.DB
+	resendClient *resend.Client
+	userRepo     *repositories.UserRepository
+	adminRepo    *repositories.AdminRepository
 }
 
-func NewAdminService(db *gorm.DB, userRepo *repositories.UserRepository, adminRepo *repositories.AdminRepository) *AdminService {
+func NewAdminService(db *gorm.DB, resendClient *resend.Client, userRepo *repositories.UserRepository, adminRepo *repositories.AdminRepository) *AdminService {
 	return &AdminService{
-		db:        db,
-		userRepo:  userRepo,
-		adminRepo: adminRepo,
+		db:           db,
+		resendClient: resendClient,
+		userRepo:     userRepo,
+		adminRepo:    adminRepo,
 	}
 }
 
@@ -99,7 +102,7 @@ func (s *AdminService) RegisterUser(input RegisterUserInput, currentUserRole uin
 		return "", fmt.Errorf("failed to create user: %w", err)
 	}
 
-	err = utils.SendRegistrationEmail(input.OrigEmail, corporateEmail, password)
+	err = utils.SendRegistrationEmail(input.OrigEmail, corporateEmail, password, s.resendClient)
 	if err != nil {
 		return "", fmt.Errorf("failed to send email: %w", err)
 	}

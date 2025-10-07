@@ -6,13 +6,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"os"
-	"strconv"
 	"strings"
 
 	"gorm.io/gorm"
 
-	"github.com/go-mail/mail"
+	"github.com/resend/resend-go/v2"
 )
 
 func GenerateCorporateEmail(firstName, lastName string, db *gorm.DB) (string, error) {
@@ -46,17 +44,21 @@ func GeneratePassword(length int) (string, error) {
 	return base64.URLEncoding.EncodeToString(bytes)[:length], nil
 }
 
-func SendRegistrationEmail(personalEmail, corporateEmail, password string) error {
-	m := mail.NewMessage()
-	m.SetHeader("From", os.Getenv("SMTP_USER"))
-	m.SetHeader("To", personalEmail)
-	m.SetHeader("Subject", "Ваши учетные данные")
-	m.SetBody("text/plain", fmt.Sprintf("Ваш email: %s\nПароль: %s", corporateEmail, password))
+func SendRegistrationEmail(personalEmail, corporateEmail, password string, resendClient *resend.Client) error {
+	htmlBody := fmt.Sprintf("<p>Ваш email: %s</p><p>Пароль: %s</p>", corporateEmail, password)
 
-	port, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
-	if err != nil {
-		return fmt.Errorf("invalid SMTP_PORT: %v", err)
+	params := &resend.SendEmailRequest{
+		From:    "Система контроля <onboarding@resend.dev>",
+		To:      []string{personalEmail},
+		Subject: "Ваши учетные данные",
+		Html:    htmlBody,
 	}
-	d := mail.NewDialer(os.Getenv("SMTP_HOST"), port, os.Getenv("SMTP_USER"), os.Getenv("SMTP_PASS"))
-	return d.DialAndSend(m)
+
+	sent, err := resendClient.Emails.Send(params)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	fmt.Println("Письмо отправлено, ID:", sent.Id)
+	return nil
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/resend/resend-go/v2"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +27,8 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	db := DbInit()
 	minioClient := storage.NewMinioClient(os.Getenv("MINIO_SERVER_URL"), os.Getenv("MINIO_PORT"), os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), []string{"images", "files"}, false)
-	server := handlers.NewServer(db, minioClient)
+	resendClient := resend.NewClient(os.Getenv("RESEND_API_KEY"))
+	server := handlers.NewServer(db, minioClient, resendClient)
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{

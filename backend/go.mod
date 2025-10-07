@@ -59,6 +59,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/minio/minio-go/v7 v7.0.95
+	github.com/resend/resend-go/v2 v2.25.0
 	golang.org/x/text v0.26.0 // indirect
 	gorm.io/driver/postgres v1.6.0
 )
