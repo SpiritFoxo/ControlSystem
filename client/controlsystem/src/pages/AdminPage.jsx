@@ -197,7 +197,7 @@ const AdminPage = () => {
                                 />
                                 <PaginationField
                                     onPageChange={handlePageChange}
-                                    totalPages={pagination.totalPages}
+                                    count={pagination.totalPages}
                                     currentPage={page}
                                 />
                             </Box>
