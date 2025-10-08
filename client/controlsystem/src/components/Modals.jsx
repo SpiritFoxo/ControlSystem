@@ -385,7 +385,8 @@ export const AssignEngineerModal = ({projectId}) => {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (event, newPage) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
     fetchEngineers(newPage, searchEmail);
   };
 
@@ -470,8 +471,9 @@ export const AssignEngineerModal = ({projectId}) => {
           </List>
 
           <PaginationField
-            pagination={pagination}
-            onPageChange={handlePageChange}
+            count={pagination.totalPages}
+            page={pagination.page}
+            onChange={handlePageChange}
           />
 
           <Button
