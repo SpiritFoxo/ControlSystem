@@ -20,7 +20,7 @@ const ReportCard = ({authorName, content}) => {
     );
 }
 
-export const ReportsTable = ({ onCommentSubmit, comments = [] }) => {
+export const ReportsTable = ({ onCommentSubmit, comments = [], pagination, onPageChange }) => {
   const [comment, setComment] = useState('');
 
   const handleSubmit = () => {
@@ -60,7 +60,11 @@ export const ReportsTable = ({ onCommentSubmit, comments = [] }) => {
           content={comment.content}
         />
       ))}
-      <PaginationField />
+      <PaginationField 
+        page={pagination.page}
+        count={pagination.totalPages} 
+        onChange={(e, value) => onPageChange(value)}
+      />
     </Box>
   );
 };

@@ -24,55 +24,67 @@ const DefectPage = () => {
         hasPrevPage: false,
     });
     const [loading, setLoading] = useState(true);
+    const [commentsLoading, setCommentsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const loadDefectAndComments = async (page = 1, limit = 10) => {
+    const loadComments = async (page = 1, limit = 10) => {
         try {
-        setLoading(true);
-        const defectResponse = await fetchDefectById(defectId);
-        setDefect(defectResponse.defect);
-
-        const commentsResponse = await fetchComments(defectId, page, limit);
-        setComments(commentsResponse.comments || []);
-        setPagination(commentsResponse.pagination || {
-            page: 1,
-            limit: 10,
-            total: 0,
-            totalPages: 0,
-            hasNextPage: false,
-            hasPrevPage: false,
-        });
-        setError(null);
+            setCommentsLoading(true);
+            setError(null);
+            const commentsResponse = await fetchComments(defectId, page, limit);
+            setComments(commentsResponse.comments || []);
+            setPagination(commentsResponse.pagination || {
+                page: 1,
+                limit: 10,
+                total: 0,
+                totalPages: 0,
+                hasNextPage: false,
+                hasPrevPage: false,
+            });
         } catch (err) {
-        setError('Failed to load data: ' + err.message);
+            setError('Failed to load comments: ' + err.message);
         } finally {
-        setLoading(false);
+            setCommentsLoading(false);
         }
     };
 
-  useEffect(() => {
-    if (defectId) {
-      loadDefectAndComments();
-    }
-  }, [defectId]);
+    const loadInitialData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const defectResponse = await fetchDefectById(defectId);
+            setDefect(defectResponse.defect);
+            await loadComments(1, pagination.limit);
+        } catch (err) {
+            setError('Failed to load data: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (defectId) {
+            loadInitialData();
+        }
+    }, [defectId]);
 
     const handleCommentSubmit = async (comment) => {
         try {
-        const newComment = await leaveComment(defectId, comment);
-        setComments((prevComments) => [newComment, ...prevComments]);
-        setPagination((prev) => ({
-            ...prev,
-            total: prev.total + 1,
-            totalPages: Math.ceil((prev.total + 1) / prev.limit),
-            hasNextPage: prev.page < Math.ceil((prev.total + 1) / prev.limit),
-        }));
+            const newComment = await leaveComment(defectId, comment);
+            setComments((prevComments) => [newComment, ...prevComments]);
+            setPagination((prev) => ({
+                ...prev,
+                total: prev.total + 1,
+                totalPages: Math.ceil((prev.total + 1) / prev.limit),
+                hasNextPage: prev.page < Math.ceil((prev.total + 1) / prev.limit),
+            }));
         } catch (err) {
-        setError('Failed to post comment: ' + err.message);
+            setError('Failed to post comment: ' + err.message);
         }
     };
 
     const handlePageChange = (newPage) => {
-        loadDefectAndComments(newPage, pagination.limit);
+        loadComments(newPage, pagination.limit);
     };
 
     const handleFileChange = (event) => {
@@ -163,12 +175,18 @@ const DefectPage = () => {
                         </Button>
                     </Box>
                     <Typography variant='h4'>Комментарии</Typography>
-                    <ReportsTable
-                        onCommentSubmit={handleCommentSubmit}
-                        comments={comments}
-                        pagination={pagination}
-                        onPageChange={handlePageChange}
-                    />
+                    {commentsLoading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <ReportsTable
+                            onCommentSubmit={handleCommentSubmit}
+                            comments={comments}
+                            pagination={pagination}
+                            onPageChange={handlePageChange}
+                        />
+                    )}
                 </Box>
             </div>
         </div>
